@@ -649,7 +649,8 @@ describe('Lexer', () => {
     });
 
     expectSyntaxError('.123').to.deep.equal({
-      message: 'Syntax Error: Invalid number, expected digit before ".".',
+      message:
+        'Syntax Error: Invalid number, expected digit before ".", did you mean "0."?.',
       locations: [{ line: 1, column: 1 }],
     });
 

@@ -311,7 +311,7 @@ function readDot(
     throw syntaxError(
       source,
       start,
-      'Invalid number, expected digit before ".".',
+      'Invalid number, expected digit before ".", did you mean "0."?.',
     );
   }
   return new Token(TokenKind.DOT, start, start + 1, line, col, prev);
