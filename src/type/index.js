@@ -161,3 +161,6 @@ export type {
 
 // Validate GraphQL schema.
 export { validateSchema, assertValidSchema } from './validate';
+
+// Schema Element type.
+export type { GraphQLSchemaElement } from './element';

@@ -103,3 +103,9 @@ export {
   findDangerousChanges,
 } from './findBreakingChanges';
 export type { BreakingChange, DangerousChange } from './findBreakingChanges';
+
+// Schema coordinates
+export {
+  resolveSchemaCoordinate,
+  resolveASTSchemaCoordinate,
+} from './resolveSchemaCoordinate';

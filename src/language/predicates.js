@@ -79,3 +79,7 @@ export function isTypeExtensionNode(node: ASTNode): boolean %checks {
     node.kind === Kind.INPUT_OBJECT_TYPE_EXTENSION
   );
 }
+
+export function isSchemaCoordinateNode(node: ASTNode): boolean %checks {
+  return node.kind === Kind.SCHEMA_COORDINATE;
+}

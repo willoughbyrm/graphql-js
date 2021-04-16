@@ -47,6 +47,7 @@ import {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   InputObjectTypeExtensionNode,
+  SchemaCoordinateNode,
 } from './ast';
 import { TokenKindEnum } from './tokenKind';
 import { Source } from './source';
@@ -114,6 +115,20 @@ export function parseType(
   source: string | Source,
   options?: ParseOptions,
 ): TypeNode;
+
+/**
+ * Given a string containing a GraphQL Schema Coordinate (ex. `Type.field`),
+ * parse the AST for that schema coordinate.
+ * Throws GraphQLError if a syntax error is encountered.
+ *
+ * Consider providing the results to the utility function:
+ * resolveASTSchemaCoordinate(). Or calling resolveSchemaCoordinate() directly
+ * with an unparsed source.
+ */
+export function parseSchemaCoordinate(
+  source: string | Source,
+  options?: ParseOptions,
+): SchemaCoordinateNode;
 
 /**
  * This class is exported only to assist people in implementing their own parsers
@@ -517,10 +532,10 @@ export declare class Parser {
   expectToken(kind: TokenKindEnum): Token;
 
   /**
-   * If the next token is of the given kind, return that token after advancing the lexer.
-   * Otherwise, do not change the parser state and return undefined.
+   * If the next token is of the given kind, return "true" after advancing the lexer.
+   * Otherwise, do not change the parser state and return "false".
    */
-  expectOptionalToken(kind: TokenKindEnum): Maybe<Token>;
+  expectOptionalToken(kind: TokenKindEnum): boolean;
 
   /**
    * If the next token is a given keyword, advance the lexer.

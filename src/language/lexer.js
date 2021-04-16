@@ -83,6 +83,7 @@ export function isPunctuatorTokenKind(kind: TokenKindEnum): boolean %checks {
     kind === TokenKind.PAREN_L ||
     kind === TokenKind.PAREN_R ||
     kind === TokenKind.SPREAD ||
+    kind === TokenKind.DOT ||
     kind === TokenKind.COLON ||
     kind === TokenKind.EQUALS ||
     kind === TokenKind.AT ||
@@ -167,7 +168,7 @@ function readToken(lexer: Lexer, prev: Token): Token {
         ) {
           return new Token(TokenKind.SPREAD, pos, pos + 3, line, col, prev);
         }
-        break;
+        return readDot(source, pos, line, col, prev);
       case 58: //  :
         return new Token(TokenKind.COLON, pos, pos + 1, line, col, prev);
       case 61: //  =
@@ -282,6 +283,38 @@ function unexpectedCharacterMessage(code: number): string {
   }
 
   return `Cannot parse the unexpected character ${printCharCode(code)}.`;
+}
+
+/**
+ * Reads a dot token with helpful messages for negative lookahead.
+ *
+ * \.(?![\.0-9])
+ */
+function readDot(
+  source: Source,
+  start: number,
+  line: number,
+  col: number,
+  prev: Token | null,
+) {
+  const nextCode = source.body.charCodeAt(start + 1);
+  if (nextCode === 46) {
+    // .
+    throw syntaxError(
+      source,
+      start,
+      'Cannot parse the unexpected character "..".',
+    );
+  }
+  if (nextCode >= 48 && nextCode <= 57) {
+    // 0 - 9
+    throw syntaxError(
+      source,
+      start,
+      'Invalid number, expected digit before ".".',
+    );
+  }
+  return new Token(TokenKind.DOT, start, start + 1, line, col, prev);
 }
 
 /**

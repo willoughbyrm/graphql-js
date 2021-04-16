@@ -109,3 +109,9 @@ export {
 
 // Wrapper type that contains DocumentNode and types that can be deduced from it.
 export { TypedQueryDocumentNode } from './typedQueryDocumentNode';
+
+// Schema coordinates
+export {
+  resolveSchemaCoordinate,
+  resolveASTSchemaCoordinate,
+} from './resolveSchemaCoordinate';

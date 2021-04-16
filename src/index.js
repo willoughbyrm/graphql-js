@@ -168,6 +168,7 @@ export type {
   GraphQLScalarSerializer,
   GraphQLScalarValueParser,
   GraphQLScalarLiteralParser,
+  GraphQLSchemaElement,
 } from './type/index';
 
 // Parse and operate on GraphQL language source files.
@@ -186,6 +187,7 @@ export {
   parse,
   parseValue,
   parseType,
+  parseSchemaCoordinate,
   // Print
   print,
   // Visit
@@ -205,6 +207,7 @@ export {
   isTypeDefinitionNode,
   isTypeSystemExtensionNode,
   isTypeExtensionNode,
+  isSchemaCoordinateNode,
 } from './language/index';
 
 export type {
@@ -273,6 +276,7 @@ export type {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   InputObjectTypeExtensionNode,
+  SchemaCoordinateNode,
 } from './language/index';
 
 // Execute GraphQL queries.
@@ -416,6 +420,8 @@ export {
   DangerousChangeType,
   findBreakingChanges,
   findDangerousChanges,
+  resolveSchemaCoordinate,
+  resolveASTSchemaCoordinate,
 } from './utilities/index';
 
 export type {

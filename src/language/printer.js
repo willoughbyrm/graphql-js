@@ -301,6 +301,18 @@ const printDocASTReducer: any = {
     leave: ({ name, directives, fields }) =>
       join(['extend input', name, join(directives, ' '), block(fields)], ' '),
   },
+
+  // Schema Coordinate
+
+  SchemaCoordinate: {
+    leave: ({ isDirective, name, fieldName, argumentName }) =>
+      join([
+        isDirective && '@',
+        name,
+        wrap('.', fieldName),
+        wrap('(', argumentName, ':)'),
+      ]),
+  },
 };
 
 /**

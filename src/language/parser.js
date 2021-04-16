@@ -47,6 +47,7 @@ import type {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   InputObjectTypeExtensionNode,
+  SchemaCoordinateNode,
 } from './ast';
 import { Kind } from './kinds';
 import { Location } from './ast';
@@ -133,6 +134,26 @@ export function parseType(
   const parser = new Parser(source, options);
   parser.expectToken(TokenKind.SOF);
   const type = parser.parseTypeReference();
+  parser.expectToken(TokenKind.EOF);
+  return type;
+}
+
+/**
+ * Given a string containing a GraphQL Schema Coordinate (ex. `Type.field`),
+ * parse the AST for that schema coordinate.
+ * Throws GraphQLError if a syntax error is encountered.
+ *
+ * Consider providing the results to the utility function:
+ * resolveASTSchemaCoordinate(). Or calling resolveSchemaCoordinate() directly
+ * with an unparsed source.
+ */
+export function parseSchemaCoordinate(
+  source: string | Source,
+  options?: ParseOptions,
+): SchemaCoordinateNode {
+  const parser = new Parser(source, options);
+  parser.expectToken(TokenKind.SOF);
+  const type = parser.parseSchemaCoordinate();
   parser.expectToken(TokenKind.EOF);
   return type;
 }
@@ -1336,6 +1357,43 @@ export class Parser {
     throw this.unexpected(start);
   }
 
+  // Schema Coordinates
+
+  /**
+   * SchemaCoordinate :
+   *   - Name
+   *   - Name . Name
+   *   - Name . Name ( Name : )
+   *   - @ Name
+   *   - @ Name ( Name : )
+   */
+  parseSchemaCoordinate(): SchemaCoordinateNode {
+    const start = this._lexer.token;
+    const isDirective = this.expectOptionalToken(TokenKind.AT);
+    const name = this.parseName();
+    let fieldName;
+    if (!isDirective && this.expectOptionalToken(TokenKind.DOT)) {
+      fieldName = this.parseName();
+    }
+    let argumentName;
+    if (
+      (isDirective || fieldName) &&
+      this.expectOptionalToken(TokenKind.PAREN_L)
+    ) {
+      argumentName = this.parseName();
+      this.expectToken(TokenKind.COLON);
+      this.expectToken(TokenKind.PAREN_R);
+    }
+    return {
+      kind: Kind.SCHEMA_COORDINATE,
+      isDirective,
+      name,
+      fieldName,
+      argumentName,
+      loc: this.loc(start),
+    };
+  }
+
   // Core parsing utility functions
 
   /**
@@ -1377,16 +1435,16 @@ export class Parser {
   }
 
   /**
-   * If the next token is of the given kind, return that token after advancing the lexer.
-   * Otherwise, do not change the parser state and return undefined.
+   * If the next token is of the given kind, return "true" after advancing the lexer.
+   * Otherwise, do not change the parser state and return "false".
    */
-  expectOptionalToken(kind: TokenKindEnum): ?Token {
+  expectOptionalToken(kind: TokenKindEnum): boolean {
     const token = this._lexer.token;
     if (token.kind === kind) {
       this._lexer.advance();
-      return token;
+      return true;
     }
-    return undefined;
+    return false;
   }
 
   /**

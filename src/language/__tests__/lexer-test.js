@@ -649,7 +649,7 @@ describe('Lexer', () => {
     });
 
     expectSyntaxError('.123').to.deep.equal({
-      message: 'Syntax Error: Cannot parse the unexpected character ".".',
+      message: 'Syntax Error: Invalid number, expected digit before ".".',
       locations: [{ line: 1, column: 1 }],
     });
 
@@ -753,6 +753,13 @@ describe('Lexer', () => {
       value: undefined,
     });
 
+    expect(lexOne('.')).to.contain({
+      kind: TokenKind.DOT,
+      start: 0,
+      end: 1,
+      value: undefined,
+    });
+
     expect(lexOne('...')).to.contain({
       kind: TokenKind.SPREAD,
       start: 0,
@@ -819,7 +826,7 @@ describe('Lexer', () => {
 
   it('lex reports useful unknown character error', () => {
     expectSyntaxError('..').to.deep.equal({
-      message: 'Syntax Error: Cannot parse the unexpected character ".".',
+      message: 'Syntax Error: Cannot parse the unexpected character "..".',
       locations: [{ line: 1, column: 1 }],
     });
 

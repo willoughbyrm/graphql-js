@@ -9,7 +9,7 @@ import { inspect } from '../../jsutils/inspect';
 import { Kind } from '../kinds';
 import { Source } from '../source';
 import { TokenKind } from '../tokenKind';
-import { parse, parseValue, parseType } from '../parser';
+import { parse, parseValue, parseType, parseSchemaCoordinate } from '../parser';
 
 import { toJSONDeep } from './toJSONDeep';
 
@@ -529,6 +529,131 @@ describe('Parser', () => {
           },
         },
       });
+    });
+  });
+
+  describe('parseSchemaCoordinate', () => {
+    it('parses Name', () => {
+      const result = parseSchemaCoordinate('MyType');
+      expect(toJSONDeep(result)).to.deep.equal({
+        kind: Kind.SCHEMA_COORDINATE,
+        loc: { start: 0, end: 6 },
+        isDirective: false,
+        name: {
+          kind: Kind.NAME,
+          loc: { start: 0, end: 6 },
+          value: 'MyType',
+        },
+        fieldName: undefined,
+        argumentName: undefined,
+      });
+    });
+
+    it('parses Name . Name', () => {
+      const result = parseSchemaCoordinate('MyType.field');
+      expect(toJSONDeep(result)).to.deep.equal({
+        kind: Kind.SCHEMA_COORDINATE,
+        loc: { start: 0, end: 12 },
+        isDirective: false,
+        name: {
+          kind: Kind.NAME,
+          loc: { start: 0, end: 6 },
+          value: 'MyType',
+        },
+        fieldName: {
+          kind: Kind.NAME,
+          loc: { start: 7, end: 12 },
+          value: 'field',
+        },
+        argumentName: undefined,
+      });
+    });
+
+    it('rejects Name . Name . Name', () => {
+      expect(() => parseSchemaCoordinate('MyType.field.deep'))
+        .to.throw()
+        .to.deep.equal({
+          message: 'Syntax Error: Expected <EOF>, found ".".',
+          locations: [{ line: 1, column: 13 }],
+        });
+    });
+
+    it('parses Name . Name ( Name : )', () => {
+      const result = parseSchemaCoordinate('MyType.field(arg:)');
+      expect(toJSONDeep(result)).to.deep.equal({
+        kind: Kind.SCHEMA_COORDINATE,
+        loc: { start: 0, end: 18 },
+        isDirective: false,
+        name: {
+          kind: Kind.NAME,
+          loc: { start: 0, end: 6 },
+          value: 'MyType',
+        },
+        fieldName: {
+          kind: Kind.NAME,
+          loc: { start: 7, end: 12 },
+          value: 'field',
+        },
+        argumentName: {
+          kind: Kind.NAME,
+          loc: { start: 13, end: 16 },
+          value: 'arg',
+        },
+      });
+    });
+
+    it('rejects Name . Name ( Name : Name )', () => {
+      expect(() => parseSchemaCoordinate('MyType.field(arg: value)'))
+        .to.throw()
+        .to.deep.equal({
+          message: 'Syntax Error: Expected ")", found Name "value".',
+          locations: [{ line: 1, column: 19 }],
+        });
+    });
+
+    it('parses @ Name', () => {
+      const result = parseSchemaCoordinate('@myDirective');
+      expect(toJSONDeep(result)).to.deep.equal({
+        kind: Kind.SCHEMA_COORDINATE,
+        loc: { start: 0, end: 12 },
+        isDirective: true,
+        name: {
+          kind: Kind.NAME,
+          loc: { start: 1, end: 12 },
+          value: 'myDirective',
+        },
+        fieldName: undefined,
+        argumentName: undefined,
+      });
+    });
+
+    it('parses @ Name ( Name : )', () => {
+      const result = parseSchemaCoordinate('@myDirective(arg:)');
+      expect(toJSONDeep(result)).to.deep.equal({
+        kind: Kind.SCHEMA_COORDINATE,
+        loc: { start: 0, end: 18 },
+        isDirective: true,
+        name: {
+          kind: Kind.NAME,
+          loc: { start: 1, end: 12 },
+          value: 'myDirective',
+        },
+        fieldName: undefined,
+        argumentName: {
+          kind: Kind.NAME,
+          loc: { start: 13, end: 16 },
+          value: 'arg',
+        },
+      });
+    });
+
+    it('rejects @ Name . Name', () => {
+      expect(() => parseSchemaCoordinate('@myDirective.field'))
+        .to.throw()
+        .to.deep.equal({
+          message: 'Syntax Error: Expected <EOF>, found ".".',
+          locations: [{ line: 1, column: 13 }],
+        });
     });
   });
 });

@@ -122,6 +122,8 @@ const QueryDocumentKeys = {
   UnionTypeExtension: ['name', 'directives', 'types'],
   EnumTypeExtension: ['name', 'directives', 'values'],
   InputObjectTypeExtension: ['name', 'directives', 'fields'],
+
+  SchemaCoordinate: ['name', 'fieldName', 'argumentName'],
 };
 
 export const BREAK: { ... } = Object.freeze({});

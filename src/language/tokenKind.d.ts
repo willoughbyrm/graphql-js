@@ -10,6 +10,7 @@ export const TokenKind: Readonly<{
   AMP: '&';
   PAREN_L: '(';
   PAREN_R: ')';
+  DOT: '.';
   SPREAD: '...';
   COLON: ':';
   EQUALS: '=';

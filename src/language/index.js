@@ -13,7 +13,7 @@ export type { TokenKindEnum } from './tokenKind';
 
 export { Lexer } from './lexer';
 
-export { parse, parseValue, parseType } from './parser';
+export { parse, parseValue, parseType, parseSchemaCoordinate } from './parser';
 export type { ParseOptions } from './parser';
 
 export { print } from './printer';
@@ -79,6 +79,7 @@ export type {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   InputObjectTypeExtensionNode,
+  SchemaCoordinateNode,
 } from './ast';
 
 export {
@@ -91,6 +92,7 @@ export {
   isTypeDefinitionNode,
   isTypeSystemExtensionNode,
   isTypeExtensionNode,
+  isSchemaCoordinateNode,
 } from './predicates';
 
 export { DirectiveLocation } from './directiveLocation';

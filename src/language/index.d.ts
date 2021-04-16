@@ -6,7 +6,13 @@ export { printLocation, printSourceLocation } from './printLocation';
 export { Kind, KindEnum } from './kinds';
 export { TokenKind, TokenKindEnum } from './tokenKind';
 export { Lexer } from './lexer';
-export { parse, parseValue, parseType, ParseOptions } from './parser';
+export {
+  parse,
+  parseValue,
+  parseType,
+  parseSchemaCoordinate,
+  ParseOptions,
+} from './parser';
 export { print } from './printer';
 export {
   visit,
@@ -76,6 +82,7 @@ export {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   InputObjectTypeExtensionNode,
+  SchemaCoordinateNode,
 } from './ast';
 
 export {
@@ -88,6 +95,7 @@ export {
   isTypeDefinitionNode,
   isTypeSystemExtensionNode,
   isTypeExtensionNode,
+  isSchemaCoordinateNode,
 } from './predicates';
 
 export { DirectiveLocation, DirectiveLocationEnum } from './directiveLocation';

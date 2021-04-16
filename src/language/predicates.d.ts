@@ -9,6 +9,7 @@ import {
   TypeDefinitionNode,
   TypeSystemExtensionNode,
   TypeExtensionNode,
+  SchemaCoordinateNode,
 } from './ast';
 
 export function isDefinitionNode(node: ASTNode): node is DefinitionNode;
@@ -34,3 +35,7 @@ export function isTypeSystemExtensionNode(
 ): node is TypeSystemExtensionNode;
 
 export function isTypeExtensionNode(node: ASTNode): node is TypeExtensionNode;
+
+export function isSchemaCoordinateNode(
+  node: ASTNode,
+): node is SchemaCoordinateNode;

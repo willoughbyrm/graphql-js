@@ -13,6 +13,7 @@ import {
   isTypeDefinitionNode,
   isTypeSystemExtensionNode,
   isTypeExtensionNode,
+  isSchemaCoordinateNode,
 } from '../predicates';
 
 const allASTNodes: Array<ASTNode> = Object.values(Kind).map(
@@ -127,6 +128,12 @@ describe('AST node predicates', () => {
       'UnionTypeExtension',
       'EnumTypeExtension',
       'InputObjectTypeExtension',
+    ]);
+  });
+
+  it('isSchemaCoordinateNode', () => {
+    expect(filterNodes(isSchemaCoordinateNode)).to.deep.equal([
+      'SchemaCoordinate',
     ]);
   });
 });
