@@ -33,7 +33,7 @@ import {
   isRequiredInput,
 } from '../type/definition';
 
-import { astFromValue } from './astFromValue';
+import { valueToLiteral } from './valueToLiteral';
 
 export const BreakingChangeType = Object.freeze({
   TYPE_REMOVED: 'TYPE_REMOVED',
@@ -541,7 +541,7 @@ function printDefaultValue(
 ): string {
   const ast = defaultValue.literal
     ? defaultValue.literal
-    : astFromValue(defaultValue.value, type);
+    : valueToLiteral(defaultValue.value, type);
   invariant(ast);
   const sortedAST = visit(ast, {
     ObjectValue(objectNode) {

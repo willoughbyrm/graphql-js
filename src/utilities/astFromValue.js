@@ -1,3 +1,4 @@
+import { deprecationWarning } from '../jsutils/deprecationWarning';
 import { inspect } from '../jsutils/inspect';
 import { invariant } from '../jsutils/invariant';
 import { isObjectLike } from '../jsutils/isObjectLike';
@@ -36,11 +37,14 @@ import {
  * | Mixed         | Enum Value           |
  * | null          | NullValue            |
  *
+ * @deprecated use valueToLiteral()
  */
 export function astFromValue(
   value: mixed,
   type: GraphQLInputType,
 ): ?ConstValueNode {
+  deprecationWarning('astFromValue', 'Use valueToLiteral().');
+
   if (isNonNullType(type)) {
     if (value === null) {
       return null;

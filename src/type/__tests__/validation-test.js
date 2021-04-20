@@ -31,6 +31,7 @@ import {
   GraphQLUnionType,
   GraphQLEnumType,
   GraphQLInputObjectType,
+  GraphQLScalarType,
   assertScalarType,
   assertInterfaceType,
   assertObjectType,
@@ -863,6 +864,266 @@ describe('Type System: Input Objects must have fields', () => {
         message:
           'Cannot reference Input Object "YetAnotherInputObject" within itself through a series of non-null fields: "nonNullSelf".',
         locations: [{ line: 17, column: 9 }],
+      },
+    ]);
+  });
+
+  it('accepts Input Objects with default values without circular references (SDL)', () => {
+    const validSchema = buildSchema(`
+      type Query {
+        field(arg1: A, arg2: B, arg3: C): String
+      }
+
+      input A {
+        x: A = null
+        y: A = { x: null, y: null }
+        z: [A] = []
+      }
+
+      input B {
+        x: B2 = {}
+      }
+
+      input B2 {
+        x: B3 = {}
+      }
+
+      input B3 {
+        x: B = { x: { x: null } }
+      }
+
+      input C {
+        x: String = "123"
+        y: Custom = {}
+      }
+
+      scalar Custom
+    `);
+
+    expect(validateSchema(validSchema)).to.deep.equal([]);
+  });
+
+  it('accepts Input Objects with default values without circular references (programmatic)', () => {
+    const AType = new GraphQLInputObjectType({
+      name: 'A',
+      fields: () => ({
+        x: { type: AType, defaultValue: null },
+        y: { type: AType, defaultValue: { x: null, y: null } },
+        z: { type: new GraphQLList(AType), defaultValue: [] },
+      }),
+    });
+
+    const BType = new GraphQLInputObjectType({
+      name: 'B',
+      fields: () => ({
+        x: { type: B2Type, defaultValue: {} },
+      }),
+    });
+
+    const B2Type = new GraphQLInputObjectType({
+      name: 'B2',
+      fields: () => ({
+        x: { type: B3Type, defaultValue: {} },
+      }),
+    });
+
+    const B3Type = new GraphQLInputObjectType({
+      name: 'B3',
+      fields: () => ({
+        x: { type: BType, defaultValue: { x: { x: null } } },
+      }),
+    });
+
+    const CustomType = new GraphQLScalarType({ name: 'Custom' });
+
+    const CType = new GraphQLInputObjectType({
+      name: 'C',
+      fields: () => ({
+        x: { type: GraphQLString, defaultValue: '123' },
+        y: { type: CustomType, defaultValue: {} },
+      }),
+    });
+
+    const validSchema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: {
+          field: {
+            type: GraphQLString,
+            args: {
+              arg1: { type: AType },
+              arg2: { type: BType },
+              arg3: { type: CType },
+            },
+          },
+        },
+      }),
+    });
+
+    expect(validateSchema(validSchema)).to.deep.equal([]);
+  });
+
+  it('rejects Input Objects with default value circular reference (SDL)', () => {
+    const invalidSchema = buildSchema(`
+      type Query {
+        field(arg1: A, arg2: B, arg3: C, arg4: D, arg5: E): String
+      }
+
+      input A {
+        x: A = {}
+      }
+
+      input B {
+        x: B2 = {}
+      }
+
+      input B2 {
+        x: B3 = {}
+      }
+
+      input B3 {
+        x: B = {}
+      }
+
+      input C {
+        x: [C] = [{}]
+      }
+
+      input D {
+        x: D = { x: { x: {} } }
+      }
+
+      input E {
+        x: E = { x: null }
+        y: E = { y: null }
+      }
+    `);
+
+    expect(validateSchema(invalidSchema)).to.deep.equal([
+      {
+        message:
+          'Cannot reference Input Object field A.x within itself through a series of default values: A.x.',
+        locations: [{ line: 7, column: 16 }],
+      },
+      {
+        message:
+          'Cannot reference Input Object field B.x within itself through a series of default values: B.x, B2.x, B3.x.',
+        locations: [
+          { line: 11, column: 17 },
+          { line: 15, column: 17 },
+          { line: 19, column: 16 },
+        ],
+      },
+      {
+        message:
+          'Cannot reference Input Object field C.x within itself through a series of default values: C.x.',
+        locations: [{ line: 23, column: 18 }],
+      },
+      {
+        message:
+          'Cannot reference Input Object field D.x within itself through a series of default values: D.x.',
+        locations: [{ line: 27, column: 16 }],
+      },
+      {
+        message:
+          'Cannot reference Input Object field E.x within itself through a series of default values: E.x, E.y.',
+        locations: [
+          { line: 31, column: 16 },
+          { line: 32, column: 16 },
+        ],
+      },
+    ]);
+  });
+
+  it('rejects Input Objects with default value circular reference (programmatic)', () => {
+    const AType = new GraphQLInputObjectType({
+      name: 'A',
+      fields: () => ({
+        x: { type: AType, defaultValue: {} },
+      }),
+    });
+
+    const BType = new GraphQLInputObjectType({
+      name: 'B',
+      fields: () => ({
+        x: { type: B2Type, defaultValue: {} },
+      }),
+    });
+
+    const B2Type = new GraphQLInputObjectType({
+      name: 'B2',
+      fields: () => ({
+        x: { type: B3Type, defaultValue: {} },
+      }),
+    });
+
+    const B3Type = new GraphQLInputObjectType({
+      name: 'B3',
+      fields: () => ({
+        x: { type: BType, defaultValue: {} },
+      }),
+    });
+
+    const CType = new GraphQLInputObjectType({
+      name: 'C',
+      fields: () => ({
+        x: { type: new GraphQLList(CType), defaultValue: [{}] },
+      }),
+    });
+
+    const DType = new GraphQLInputObjectType({
+      name: 'D',
+      fields: () => ({
+        x: { type: DType, defaultValue: { x: { x: {} } } },
+      }),
+    });
+
+    const EType = new GraphQLInputObjectType({
+      name: 'E',
+      fields: () => ({
+        x: { type: EType, defaultValue: { x: null } },
+        y: { type: EType, defaultValue: { y: null } },
+      }),
+    });
+
+    const invalidSchema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: {
+          field: {
+            type: GraphQLString,
+            args: {
+              arg1: { type: AType },
+              arg2: { type: BType },
+              arg3: { type: CType },
+              arg4: { type: DType },
+              arg5: { type: EType },
+            },
+          },
+        },
+      }),
+    });
+
+    expect(validateSchema(invalidSchema)).to.deep.equal([
+      {
+        message:
+          'Cannot reference Input Object field A.x within itself through a series of default values: A.x.',
+      },
+      {
+        message:
+          'Cannot reference Input Object field B.x within itself through a series of default values: B.x, B2.x, B3.x.',
+      },
+      {
+        message:
+          'Cannot reference Input Object field C.x within itself through a series of default values: C.x.',
+      },
+      {
+        message:
+          'Cannot reference Input Object field D.x within itself through a series of default values: D.x.',
+      },
+      {
+        message:
+          'Cannot reference Input Object field E.x within itself through a series of default values: E.x, E.y.',
       },
     ]);
   });

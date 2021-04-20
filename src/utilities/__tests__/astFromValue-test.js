@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
@@ -18,7 +20,15 @@ import {
 
 import { astFromValue } from '../astFromValue';
 
+import { expectWarning } from './expectWarning';
+
 describe('astFromValue', () => {
+  it('warns about deprecation', () => {
+    expectWarning(() => astFromValue(true, GraphQLBoolean)).to.equal(
+      'DEPRECATION WARNING: The function "astFromValue" is deprecated and may be removed in a future version. Use valueToLiteral().',
+    );
+  });
+
   it('converts boolean values to ASTs', () => {
     expect(astFromValue(true, GraphQLBoolean)).to.deep.equal({
       kind: 'BooleanValue',
