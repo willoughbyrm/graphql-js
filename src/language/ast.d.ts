@@ -609,6 +609,6 @@ export interface SchemaCoordinateNode {
   readonly loc?: Location;
   readonly isDirective: boolean;
   readonly name: NameNode;
-  readonly fieldName?: NameNode;
+  readonly memberName?: NameNode;
   readonly argumentName?: NameNode;
 }

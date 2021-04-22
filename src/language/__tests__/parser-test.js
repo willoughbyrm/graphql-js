@@ -544,7 +544,7 @@ describe('Parser', () => {
           loc: { start: 0, end: 6 },
           value: 'MyType',
         },
-        fieldName: undefined,
+        memberName: undefined,
         argumentName: undefined,
       });
     });
@@ -560,7 +560,7 @@ describe('Parser', () => {
           loc: { start: 0, end: 6 },
           value: 'MyType',
         },
-        fieldName: {
+        memberName: {
           kind: Kind.NAME,
           loc: { start: 7, end: 12 },
           value: 'field',
@@ -589,7 +589,7 @@ describe('Parser', () => {
           loc: { start: 0, end: 6 },
           value: 'MyType',
         },
-        fieldName: {
+        memberName: {
           kind: Kind.NAME,
           loc: { start: 7, end: 12 },
           value: 'field',
@@ -622,7 +622,7 @@ describe('Parser', () => {
           loc: { start: 1, end: 12 },
           value: 'myDirective',
         },
-        fieldName: undefined,
+        memberName: undefined,
         argumentName: undefined,
       });
     });
@@ -638,7 +638,7 @@ describe('Parser', () => {
           loc: { start: 1, end: 12 },
           value: 'myDirective',
         },
-        fieldName: undefined,
+        memberName: undefined,
         argumentName: {
           kind: Kind.NAME,
           loc: { start: 13, end: 16 },

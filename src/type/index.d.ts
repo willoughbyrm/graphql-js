@@ -167,6 +167,3 @@ export {
 } from './introspection';
 
 export { validateSchema, assertValidSchema } from './validate';
-
-// Schema Element type.
-export { GraphQLSchemaElement } from './element';

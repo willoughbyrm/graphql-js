@@ -1371,13 +1371,13 @@ export class Parser {
     const start = this._lexer.token;
     const isDirective = this.expectOptionalToken(TokenKind.AT);
     const name = this.parseName();
-    let fieldName;
+    let memberName;
     if (!isDirective && this.expectOptionalToken(TokenKind.DOT)) {
-      fieldName = this.parseName();
+      memberName = this.parseName();
     }
     let argumentName;
     if (
-      (isDirective || fieldName) &&
+      (isDirective || memberName) &&
       this.expectOptionalToken(TokenKind.PAREN_L)
     ) {
       argumentName = this.parseName();
@@ -1388,7 +1388,7 @@ export class Parser {
       kind: Kind.SCHEMA_COORDINATE,
       isDirective,
       name,
-      fieldName,
+      memberName,
       argumentName,
       loc: this.loc(start),
     };

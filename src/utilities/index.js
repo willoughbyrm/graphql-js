@@ -106,6 +106,7 @@ export type { BreakingChange, DangerousChange } from './findBreakingChanges';
 
 // Schema coordinates
 export {
+  GraphQLSchemaElement,
   resolveSchemaCoordinate,
   resolveASTSchemaCoordinate,
 } from './resolveSchemaCoordinate';

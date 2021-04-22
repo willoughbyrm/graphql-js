@@ -168,7 +168,6 @@ export type {
   GraphQLScalarSerializer,
   GraphQLScalarValueParser,
   GraphQLScalarLiteralParser,
-  GraphQLSchemaElement,
 } from './type/index';
 
 // Parse and operate on GraphQL language source files.
@@ -450,4 +449,5 @@ export type {
   BuildSchemaOptions,
   BreakingChange,
   DangerousChange,
+  GraphQLSchemaElement,
 } from './utilities/index';

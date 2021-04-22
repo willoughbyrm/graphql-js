@@ -1,5 +1,4 @@
 import type { GraphQLSchema } from '../type/schema';
-import type { GraphQLSchemaElement } from '../type/element';
 import type { SchemaCoordinateNode } from '../language/ast';
 import type { Source } from '../language/source';
 import {
@@ -9,6 +8,53 @@ import {
   isInputObjectType,
 } from '../type/definition';
 import { parseSchemaCoordinate } from '../language/parser';
+import type {
+  GraphQLNamedType,
+  GraphQLField,
+  GraphQLInputField,
+  GraphQLEnumValue,
+  GraphQLArgument,
+} from '../type/definition';
+import type { GraphQLDirective } from '../type/directives';
+
+/**
+ * A schema element may be one of the following kinds:
+ */
+export type GraphQLSchemaElement =
+  | {|
+      kind: 'NamedType',
+      type: GraphQLNamedType,
+    |}
+  | {|
+      kind: 'Field',
+      type: GraphQLNamedType,
+      field: GraphQLField<mixed, mixed>,
+    |}
+  | {|
+      kind: 'InputField',
+      type: GraphQLNamedType,
+      inputField: GraphQLInputField,
+    |}
+  | {|
+      kind: 'EnumValue',
+      type: GraphQLNamedType,
+      enumValue: GraphQLEnumValue,
+    |}
+  | {|
+      kind: 'FieldArgument',
+      type: GraphQLNamedType,
+      field: GraphQLField<mixed, mixed>,
+      fieldArgument: GraphQLArgument,
+    |}
+  | {|
+      kind: 'Directive',
+      directive: GraphQLDirective,
+    |}
+  | {|
+      kind: 'DirectiveArgument',
+      directive: GraphQLDirective,
+      directiveArgument: GraphQLArgument,
+    |};
 
 /**
  * A schema coordinate is resolved in the context of a GraphQL schema to
@@ -34,7 +80,7 @@ export function resolveASTSchemaCoordinate(
   schema: GraphQLSchema,
   schemaCoordinate: SchemaCoordinateNode,
 ): GraphQLSchemaElement | void {
-  const { isDirective, name, fieldName, argumentName } = schemaCoordinate;
+  const { isDirective, name, memberName, argumentName } = schemaCoordinate;
   if (isDirective) {
     // SchemaCoordinate :
     //   - @ Name
@@ -45,7 +91,10 @@ export function resolveASTSchemaCoordinate(
     if (!argumentName) {
       // SchemaCoordinate : @ Name
       // Return the directive in the {schema} named {directiveName}.
-      return directive || undefined;
+      if (!directive) {
+        return;
+      }
+      return { kind: 'Directive', directive };
     }
 
     // SchemaCoordinate : @ Name ( Name : )
@@ -53,7 +102,15 @@ export function resolveASTSchemaCoordinate(
     if (!directive) {
       return;
     }
-    return directive.args.find((arg) => arg.name === argumentName.value);
+    // Let {directiveArgumentName} be the value of the second {Name}.
+    // Return the argument of {directive} named {directiveArgumentName}.
+    const directiveArgument = directive.args.find(
+      (arg) => arg.name === argumentName.value,
+    );
+    if (!directiveArgument) {
+      return;
+    }
+    return { kind: 'DirectiveArgument', directive, directiveArgument };
   }
 
   // SchemaCoordinate :
@@ -63,10 +120,13 @@ export function resolveASTSchemaCoordinate(
   // Let {typeName} be the value of the first {Name}.
   // Let {type} be the type in the {schema} named {typeName}.
   const type = schema.getType(name.value);
-  if (!fieldName) {
+  if (!memberName) {
     // SchemaCoordinate : Name
     // Return the type in the {schema} named {typeName}.
-    return type || undefined;
+    if (!type) {
+      return;
+    }
+    return { kind: 'NamedType', type };
   }
 
   if (!argumentName) {
@@ -75,13 +135,21 @@ export function resolveASTSchemaCoordinate(
     if (isEnumType(type)) {
       // Let {enumValueName} be the value of the second {Name}.
       // Return the enum value of {type} named {enumValueName}.
-      return type.getValue(fieldName.value) || undefined;
+      const enumValue = type.getValue(memberName.value);
+      if (!enumValue) {
+        return;
+      }
+      return { kind: 'EnumValue', type, enumValue };
     }
     // Otherwise if {type} is an Input Object type:
     if (isInputObjectType(type)) {
       // Let {inputFieldName} be the value of the second {Name}.
       // Return the input field of {type} named {inputFieldName}.
-      return type.getFields()[fieldName.value];
+      const inputField = type.getFields()[memberName.value];
+      if (!inputField) {
+        return;
+      }
+      return { kind: 'InputField', type, inputField };
     }
     // Otherwise:
     // Assert {type} must be an Object or Interface type.
@@ -90,7 +158,11 @@ export function resolveASTSchemaCoordinate(
     }
     // Let {fieldName} be the value of the second {Name}.
     // Return the field of {type} named {fieldName}.
-    return type.getFields()[fieldName.value];
+    const field = type.getFields()[memberName.value];
+    if (!field) {
+      return;
+    }
+    return { kind: 'Field', type, field };
   }
 
   // SchemaCoordinate : Name . Name ( Name : )
@@ -100,12 +172,18 @@ export function resolveASTSchemaCoordinate(
   }
   // Let {fieldName} be the value of the second {Name}.
   // Let {field} be the field of {type} named {fieldName}.
-  const field = type.getFields()[fieldName.value];
+  const field = type.getFields()[memberName.value];
   // Assert {field} must exist.
   if (!field) {
     return;
   }
-  // Let {argumentName} be the value of the third {Name}.
-  // Return the argument of {field} named {argumentName}.
-  return field.args.find((arg) => arg.name === argumentName.value);
+  // Let {fieldArgumentName} be the value of the third {Name}.
+  // Return the argument of {field} named {fieldArgumentName}.
+  const fieldArgument = field.args.find(
+    (arg) => arg.name === argumentName.value,
+  );
+  if (!fieldArgument) {
+    return;
+  }
+  return { kind: 'FieldArgument', type, field, fieldArgument };
 }

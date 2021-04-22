@@ -112,6 +112,7 @@ export { TypedQueryDocumentNode } from './typedQueryDocumentNode';
 
 // Schema coordinates
 export {
+  GraphQLSchemaElement,
   resolveSchemaCoordinate,
   resolveASTSchemaCoordinate,
 } from './resolveSchemaCoordinate';

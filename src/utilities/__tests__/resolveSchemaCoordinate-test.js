@@ -31,116 +31,147 @@ describe('resolveSchemaCoordinate', () => {
   `);
 
   it('resolves a Named Type', () => {
-    const expected = schema.getType('Business');
-    expect(expected).not.to.equal(undefined);
-    expect(resolveSchemaCoordinate(schema, 'Business')).to.equal(expected);
+    expect(resolveSchemaCoordinate(schema, 'Business')).to.deep.equal({
+      kind: 'NamedType',
+      type: schema.getType('Business'),
+    });
 
-    expect(resolveSchemaCoordinate(schema, 'String')).to.equal(
-      schema.getType('String'),
-    );
+    expect(resolveSchemaCoordinate(schema, 'String')).to.deep.equal({
+      kind: 'NamedType',
+      type: schema.getType('String'),
+    });
 
-    expect(resolveSchemaCoordinate(schema, 'private')).to.equal(undefined);
+    expect(resolveSchemaCoordinate(schema, 'private')).to.deep.equal(undefined);
 
-    expect(resolveSchemaCoordinate(schema, 'Unknown')).to.equal(undefined);
+    expect(resolveSchemaCoordinate(schema, 'Unknown')).to.deep.equal(undefined);
   });
 
   it('resolves a Type Field', () => {
-    const expected = schema.getType('Business').getFields().name;
-    expect(expected).not.to.equal(undefined);
-    expect(resolveSchemaCoordinate(schema, 'Business.name')).to.equal(expected);
+    const type = schema.getType('Business');
+    const field = type.getFields().name;
+    expect(resolveSchemaCoordinate(schema, 'Business.name')).to.deep.equal({
+      kind: 'Field',
+      type,
+      field,
+    });
 
-    expect(resolveSchemaCoordinate(schema, 'Business.unknown')).to.equal(
+    expect(resolveSchemaCoordinate(schema, 'Business.unknown')).to.deep.equal(
       undefined,
     );
 
-    expect(resolveSchemaCoordinate(schema, 'Unknown.field')).to.equal(
+    expect(resolveSchemaCoordinate(schema, 'Unknown.field')).to.deep.equal(
       undefined,
     );
 
-    expect(resolveSchemaCoordinate(schema, 'String.field')).to.equal(undefined);
+    expect(resolveSchemaCoordinate(schema, 'String.field')).to.deep.equal(
+      undefined,
+    );
   });
 
   it('does not resolve meta-fields', () => {
-    expect(resolveSchemaCoordinate(schema, 'Business.__typename')).to.equal(
-      undefined,
-    );
+    expect(
+      resolveSchemaCoordinate(schema, 'Business.__typename'),
+    ).to.deep.equal(undefined);
   });
 
   it('resolves a Input Field', () => {
-    const expected = schema.getType('SearchCriteria').getFields().filter;
-    expect(expected).not.to.equal(undefined);
-    expect(resolveSchemaCoordinate(schema, 'SearchCriteria.filter')).to.equal(
-      expected,
-    );
+    const type = schema.getType('SearchCriteria');
+    const inputField = type.getFields().filter;
+    expect(
+      resolveSchemaCoordinate(schema, 'SearchCriteria.filter'),
+    ).to.deep.equal({
+      kind: 'InputField',
+      type,
+      inputField,
+    });
 
-    expect(resolveSchemaCoordinate(schema, 'SearchCriteria.unknown')).to.equal(
-      undefined,
-    );
+    expect(
+      resolveSchemaCoordinate(schema, 'SearchCriteria.unknown'),
+    ).to.deep.equal(undefined);
   });
 
   it('resolves a Enum Value', () => {
-    const expected = schema.getType('SearchFilter').getValue('OPEN_NOW');
-    expect(expected).not.to.equal(undefined);
-    expect(resolveSchemaCoordinate(schema, 'SearchFilter.OPEN_NOW')).to.equal(
-      expected,
-    );
+    const type = schema.getType('SearchFilter');
+    const enumValue = type.getValue('OPEN_NOW');
+    expect(
+      resolveSchemaCoordinate(schema, 'SearchFilter.OPEN_NOW'),
+    ).to.deep.equal({
+      kind: 'EnumValue',
+      type,
+      enumValue,
+    });
 
-    expect(resolveSchemaCoordinate(schema, 'SearchFilter.UNKNOWN')).to.equal(
-      undefined,
-    );
+    expect(
+      resolveSchemaCoordinate(schema, 'SearchFilter.UNKNOWN'),
+    ).to.deep.equal(undefined);
   });
 
   it('resolves a Field Argument', () => {
-    const expected = schema
-      .getType('Query')
-      .getFields()
-      .searchBusiness.args.find((arg) => arg.name === 'criteria');
-    expect(expected).not.to.equal(undefined);
+    const type = schema.getType('Query');
+    const field = type.getFields().searchBusiness;
+    const fieldArgument = field.args.find((arg) => arg.name === 'criteria');
     expect(
       resolveSchemaCoordinate(schema, 'Query.searchBusiness(criteria:)'),
-    ).to.equal(expected);
+    ).to.deep.equal({
+      kind: 'FieldArgument',
+      type,
+      field,
+      fieldArgument,
+    });
 
-    expect(resolveSchemaCoordinate(schema, 'Business.name(unknown:)')).to.equal(
-      undefined,
-    );
+    expect(
+      resolveSchemaCoordinate(schema, 'Business.name(unknown:)'),
+    ).to.deep.equal(undefined);
 
-    expect(resolveSchemaCoordinate(schema, 'Unknown.field(arg:)')).to.equal(
-      undefined,
-    );
+    expect(
+      resolveSchemaCoordinate(schema, 'Unknown.field(arg:)'),
+    ).to.deep.equal(undefined);
 
-    expect(resolveSchemaCoordinate(schema, 'Business.unknown(arg:)')).to.equal(
-      undefined,
-    );
+    expect(
+      resolveSchemaCoordinate(schema, 'Business.unknown(arg:)'),
+    ).to.deep.equal(undefined);
 
     expect(
       resolveSchemaCoordinate(schema, 'SearchCriteria.name(arg:)'),
-    ).to.equal(undefined);
+    ).to.deep.equal(undefined);
   });
 
   it('resolves a Directive', () => {
-    const expected = schema.getDirective('private');
-    expect(expected).not.to.equal(undefined);
-    expect(resolveSchemaCoordinate(schema, '@private')).to.equal(expected);
+    expect(resolveSchemaCoordinate(schema, '@private')).to.deep.equal({
+      kind: 'Directive',
+      directive: schema.getDirective('private'),
+    });
 
-    expect(resolveSchemaCoordinate(schema, '@unknown')).to.equal(undefined);
+    expect(resolveSchemaCoordinate(schema, '@deprecated')).to.deep.equal({
+      kind: 'Directive',
+      directive: schema.getDirective('deprecated'),
+    });
 
-    expect(resolveSchemaCoordinate(schema, '@Business')).to.equal(undefined);
-  });
-
-  it('resolves a Directive Argument', () => {
-    const expected = schema
-      .getDirective('private')
-      .args.find((arg) => arg.name === 'scope');
-    expect(expected).not.to.equal(undefined);
-    expect(resolveSchemaCoordinate(schema, '@private(scope:)')).to.equal(
-      expected,
-    );
-
-    expect(resolveSchemaCoordinate(schema, '@private(unknown:)')).to.equal(
+    expect(resolveSchemaCoordinate(schema, '@unknown')).to.deep.equal(
       undefined,
     );
 
-    expect(resolveSchemaCoordinate(schema, '@unknown(arg:)')).to.equal(
+    expect(resolveSchemaCoordinate(schema, '@Business')).to.deep.equal(
+      undefined,
+    );
+  });
+
+  it('resolves a Directive Argument', () => {
+    const directive = schema.getDirective('private');
+    const directiveArgument = directive.args.find(
+      (arg) => arg.name === 'scope',
+    );
+    expect(resolveSchemaCoordinate(schema, '@private(scope:)')).to.deep.equal({
+      kind: 'DirectiveArgument',
+      directive,
+      directiveArgument,
+    });
+
+    expect(resolveSchemaCoordinate(schema, '@private(unknown:)')).to.deep.equal(
+      undefined,
+    );
+
+    expect(resolveSchemaCoordinate(schema, '@unknown(arg:)')).to.deep.equal(
       undefined,
     );
   });

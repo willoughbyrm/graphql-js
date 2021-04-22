@@ -305,11 +305,11 @@ const printDocASTReducer: any = {
   // Schema Coordinate
 
   SchemaCoordinate: {
-    leave: ({ isDirective, name, fieldName, argumentName }) =>
+    leave: ({ isDirective, name, memberName, argumentName }) =>
       join([
         isDirective && '@',
         name,
-        wrap('.', fieldName),
+        wrap('.', memberName),
         wrap('(', argumentName, ':)'),
       ]),
   },

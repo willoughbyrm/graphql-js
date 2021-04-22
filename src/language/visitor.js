@@ -123,7 +123,7 @@ const QueryDocumentKeys = {
   EnumTypeExtension: ['name', 'directives', 'values'],
   InputObjectTypeExtension: ['name', 'directives', 'fields'],
 
-  SchemaCoordinate: ['name', 'fieldName', 'argumentName'],
+  SchemaCoordinate: ['name', 'memberName', 'argumentName'],
 };
 
 export const BREAK: { ... } = Object.freeze({});

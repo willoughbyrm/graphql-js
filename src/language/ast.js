@@ -635,6 +635,6 @@ export type SchemaCoordinateNode = {|
   +loc?: Location,
   +isDirective: boolean,
   +name: NameNode,
-  +fieldName?: NameNode,
+  +memberName?: NameNode,
   +argumentName?: NameNode,
 |};
