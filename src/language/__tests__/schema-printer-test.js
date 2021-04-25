@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import dedent from '../../__testUtils__/dedent';
-import kitchenSinkSDL from '../../__testUtils__/kitchenSinkSDL';
+import { dedent } from '../../__testUtils__/dedent';
+import { kitchenSinkSDL } from '../../__testUtils__/kitchenSinkSDL';
 
 import { parse } from '../parser';
 import { print } from '../printer';
@@ -25,15 +25,15 @@ describe('Printer: SDL document', () => {
     );
   });
 
-  it('does not alter ast', () => {
-    const ast = parse(kitchenSinkSDL);
-    const astBefore = JSON.stringify(ast);
-    print(ast);
-    expect(JSON.stringify(ast)).to.equal(astBefore);
-  });
+  it('prints kitchen sink without altering ast', () => {
+    const ast = parse(kitchenSinkSDL, { noLocation: true });
 
-  it('prints kitchen sink', () => {
-    const printed = print(parse(kitchenSinkSDL));
+    const astBeforePrintCall = JSON.stringify(ast);
+    const printed = print(ast);
+    const printedAST = parse(printed, { noLocation: true });
+
+    expect(printedAST).to.deep.equal(ast);
+    expect(JSON.stringify(ast)).to.equal(astBeforePrintCall);
 
     expect(printed).to.equal(dedent`
       """This is a description of the schema as a whole."""

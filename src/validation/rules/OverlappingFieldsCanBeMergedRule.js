@@ -1,8 +1,5 @@
-import find from '../../polyfills/find';
-import objectEntries from '../../polyfills/objectEntries';
-
 import type { ObjMap } from '../../jsutils/ObjMap';
-import inspect from '../../jsutils/inspect';
+import { inspect } from '../../jsutils/inspect';
 
 import { GraphQLError } from '../../error/GraphQLError';
 
@@ -464,7 +461,7 @@ function collectConflictsWithin(
   // name and the value at that key is a list of all fields which provide that
   // response name. For every response name, if there are multiple fields, they
   // must be compared to find a potential conflict.
-  for (const [responseName, fields] of objectEntries(fieldMap)) {
+  for (const [responseName, fields] of Object.entries(fieldMap)) {
     // This compares every field in the list to every other field in this list
     // (except to itself). If the list only has one item, nothing needs to
     // be compared.
@@ -508,10 +505,9 @@ function collectConflictsBetween(
   // response name. For any response name which appears in both provided field
   // maps, each field from the first field map must be compared to every field
   // in the second field map to find potential conflicts.
-  for (const responseName of Object.keys(fieldMap1)) {
+  for (const [responseName, fields1] of Object.entries(fieldMap1)) {
     const fields2 = fieldMap2[responseName];
     if (fields2) {
-      const fields1 = fieldMap1[responseName];
       for (let i = 0; i < fields1.length; i++) {
         for (let j = 0; j < fields2.length; j++) {
           const conflict = findConflict(
@@ -631,8 +627,7 @@ function sameArguments(
     return false;
   }
   return arguments1.every((argument1) => {
-    const argument2 = find(
-      arguments2,
+    const argument2 = arguments2.find(
       (argument) => argument.name.value === argument1.name.value,
     );
     if (!argument2) {
@@ -779,13 +774,8 @@ function subfieldConflicts(
   if (conflicts.length > 0) {
     return [
       [responseName, conflicts.map(([reason]) => reason)],
-      conflicts.reduce((allFields, [, fields1]) => allFields.concat(fields1), [
-        node1,
-      ]),
-      conflicts.reduce(
-        (allFields, [, , fields2]) => allFields.concat(fields2),
-        [node2],
-      ),
+      [node1, ...conflicts.map(([, fields1]) => fields1).flat()],
+      [node2, ...conflicts.map(([, , fields2]) => fields2).flat()],
     ];
   }
 }

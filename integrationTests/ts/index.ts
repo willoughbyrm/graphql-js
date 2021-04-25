@@ -13,29 +13,27 @@ const example: SomeExtension = {
   string: 'Meaning of life',
 };
 
-// FIXME: The following code block requires a version of TypeScript >= 3.2
-/*
-
 declare module 'graphql' {
-  interface GraphQLObjectTypeExtensions<TSource = any, TContext = any> {
+  interface GraphQLObjectTypeExtensions<_TSource = any, _TContext = any> {
     someObjectExtension?: SomeExtension;
   }
+
   interface GraphQLFieldExtensions<
-    TSource,
-    TContext,
-    TArgs = { [argName: string]: any }
+    _TSource,
+    _TContext,
+    _TArgs = { [argName: string]: any }
   > {
     someFieldExtension?: SomeExtension;
   }
+
   interface GraphQLArgumentExtensions {
     someArgumentExtension?: SomeExtension;
   }
 }
-*/
 
 const queryType: GraphQLObjectType = new GraphQLObjectType({
   name: 'Query',
-  fields: {
+  fields: () => ({
     sayHi: {
       type: GraphQLString,
       args: {
@@ -51,7 +49,7 @@ const queryType: GraphQLObjectType = new GraphQLObjectType({
         someFieldExtension: example,
       },
     },
-  },
+  }),
   extensions: {
     someObjectExtension: example,
   },
@@ -60,6 +58,15 @@ const queryType: GraphQLObjectType = new GraphQLObjectType({
 const schema: GraphQLSchema = new GraphQLSchema({
   query: queryType,
 });
+
+function checkExtensionTypes(_test: SomeExtension | null | undefined) {}
+
+checkExtensionTypes(queryType?.extensions?.someObjectExtension);
+
+const sayHiField = queryType?.getFields()?.sayHi;
+checkExtensionTypes(sayHiField?.extensions?.someFieldExtension);
+
+checkExtensionTypes(sayHiField?.args?.[0]?.extensions?.someArgumentExtension);
 
 const result: ExecutionResult = graphqlSync({
   schema,

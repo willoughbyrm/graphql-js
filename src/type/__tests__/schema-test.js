@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import dedent from '../../__testUtils__/dedent';
+import { dedent } from '../../__testUtils__/dedent';
 
 import { printSchema } from '../../utilities/printSchema';
 
@@ -140,19 +140,19 @@ describe('Type System: Schema', () => {
     it('defines a query root', () => {
       const schema = new GraphQLSchema({ query: testType });
       expect(schema.getQueryType()).to.equal(testType);
-      expect(schema.getTypeMap()).to.include.key('TestType');
+      expect(schema.getTypeMap()).to.include.keys('TestType');
     });
 
     it('defines a mutation root', () => {
       const schema = new GraphQLSchema({ mutation: testType });
       expect(schema.getMutationType()).to.equal(testType);
-      expect(schema.getTypeMap()).to.include.key('TestType');
+      expect(schema.getTypeMap()).to.include.keys('TestType');
     });
 
     it('defines a subscription root', () => {
       const schema = new GraphQLSchema({ subscription: testType });
       expect(schema.getSubscriptionType()).to.equal(testType);
-      expect(schema.getTypeMap()).to.include.key('TestType');
+      expect(schema.getTypeMap()).to.include.keys('TestType');
     });
   });
 
@@ -183,7 +183,6 @@ describe('Type System: Schema', () => {
       expect(schema.getType('SomeSubtype')).to.equal(SomeSubtype);
 
       expect(schema.isSubType(SomeInterface, SomeSubtype)).to.equal(true);
-      expect(schema.isPossibleType(SomeInterface, SomeSubtype)).to.equal(true);
     });
 
     it("includes interface's thunk subtypes in the type map", () => {

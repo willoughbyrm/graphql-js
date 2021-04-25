@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import inspect from '../../jsutils/inspect';
-import invariant from '../../jsutils/invariant';
+import { inspect } from '../../jsutils/inspect';
+import { invariant } from '../../jsutils/invariant';
 
 import { Kind } from '../../language/kinds';
 import { parse } from '../../language/parser';
@@ -67,30 +67,6 @@ describe('Execute: Handles basic execution tasks', () => {
     expect(() => executeSync({ schema, document, variableValues })).to.throw(
       'Variables must be provided as an Object where each property is a variable value. Perhaps look to see if an unparsed JSON string was provided.',
     );
-  });
-
-  it('accepts positional arguments', () => {
-    const schema = new GraphQLSchema({
-      query: new GraphQLObjectType({
-        name: 'Type',
-        fields: {
-          a: {
-            type: GraphQLString,
-            resolve(rootValue) {
-              return rootValue;
-            },
-          },
-        },
-      }),
-    });
-
-    const document = parse('{ a }');
-    const rootValue = 'rootValue';
-    const result = execute(schema, document, rootValue);
-
-    expect(result).to.deep.equal({
-      data: { a: 'rootValue' },
-    });
   });
 
   it('executes arbitrary code', async () => {

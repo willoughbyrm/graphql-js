@@ -2,6 +2,7 @@
 /* eslint-disable import/no-cycle */
 
 import { Maybe } from '../jsutils/Maybe';
+import { ObjMap } from '../jsutils/ObjMap';
 
 import { SchemaDefinitionNode, SchemaExtensionNode } from '../language/ast';
 
@@ -16,8 +17,8 @@ import {
 /**
  * Test if the given value is a GraphQL schema.
  */
-export function isSchema(schema: any): schema is GraphQLSchema;
-export function assertSchema(schema: any): GraphQLSchema;
+export function isSchema(schema: unknown): schema is GraphQLSchema;
+export function assertSchema(schema: unknown): GraphQLSchema;
 
 /**
  * Custom extensions
@@ -29,7 +30,7 @@ export function assertSchema(schema: any): GraphQLSchema;
  * an object which can contain all the values you need.
  */
 export interface GraphQLSchemaExtensions {
-  [attributeName: string]: any;
+  [attributeName: string]: unknown;
 }
 
 /**
@@ -62,7 +63,7 @@ export class GraphQLSchema {
   description: Maybe<string>;
   extensions: Maybe<Readonly<GraphQLSchemaExtensions>>;
   astNode: Maybe<SchemaDefinitionNode>;
-  extensionASTNodes: Maybe<ReadonlyArray<SchemaExtensionNode>>;
+  extensionASTNodes: ReadonlyArray<SchemaExtensionNode>;
 
   constructor(config: Readonly<GraphQLSchemaConfig>);
   getQueryType(): Maybe<GraphQLObjectType>;
@@ -79,15 +80,9 @@ export class GraphQLSchema {
     interfaceType: GraphQLInterfaceType,
   ): InterfaceImplementations;
 
-  // @deprecated: use isSubType instead - will be removed in v16.
-  isPossibleType(
-    abstractType: GraphQLAbstractType,
-    possibleType: GraphQLObjectType,
-  ): boolean;
-
   isSubType(
     abstractType: GraphQLAbstractType,
-    maybeSubType: GraphQLNamedType,
+    maybeSubType: GraphQLObjectType | GraphQLInterfaceType,
   ): boolean;
 
   getDirectives(): ReadonlyArray<GraphQLDirective>;
@@ -100,11 +95,10 @@ export class GraphQLSchema {
     extensionASTNodes: ReadonlyArray<SchemaExtensionNode>;
     assumeValid: boolean;
   };
+  get [Symbol.toStringTag](): string;
 }
 
-interface TypeMap {
-  [key: string]: GraphQLNamedType;
-}
+type TypeMap = ObjMap<GraphQLNamedType>;
 
 interface InterfaceImplementations {
   objects: ReadonlyArray<GraphQLObjectType>;
@@ -142,6 +136,6 @@ export interface GraphQLSchemaNormalizedConfig extends GraphQLSchemaConfig {
   types: Array<GraphQLNamedType>;
   directives: Array<GraphQLDirective>;
   extensions: Maybe<Readonly<GraphQLSchemaExtensions>>;
-  extensionASTNodes: Maybe<ReadonlyArray<SchemaExtensionNode>>;
+  extensionASTNodes: ReadonlyArray<SchemaExtensionNode>;
   assumeValid: boolean;
 }

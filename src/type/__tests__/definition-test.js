@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import inspect from '../../jsutils/inspect';
-import identityFunc from '../../jsutils/identityFunc';
+import { inspect } from '../../jsutils/inspect';
+import { identityFunc } from '../../jsutils/identityFunc';
 
 import { parseValue } from '../../language/parser';
 
@@ -46,12 +46,12 @@ describe('Type System: Scalars', () => {
     expect(() => new GraphQLScalarType({ name: 'SomeScalar' })).to.not.throw();
   });
 
-  it('accepts a Scalar type defining specifiedByUrl', () => {
+  it('accepts a Scalar type defining specifiedByURL', () => {
     expect(
       () =>
         new GraphQLScalarType({
           name: 'SomeScalar',
-          specifiedByUrl: 'https://example.com/foo_spec',
+          specifiedByURL: 'https://example.com/foo_spec',
         }),
     ).not.to.throw();
   });
@@ -139,16 +139,16 @@ describe('Type System: Scalars', () => {
     );
   });
 
-  it('rejects a Scalar type defining specifiedByUrl with an incorrect type', () => {
+  it('rejects a Scalar type defining specifiedByURL with an incorrect type', () => {
     expect(
       () =>
         new GraphQLScalarType({
           name: 'SomeScalar',
           // $FlowExpectedError[incompatible-call]
-          specifiedByUrl: {},
+          specifiedByURL: {},
         }),
     ).to.throw(
-      'SomeScalar must provide "specifiedByUrl" as a string, but got: {}.',
+      'SomeScalar must provide "specifiedByURL" as a string, but got: {}.',
     );
   });
 });
@@ -225,13 +225,11 @@ describe('Type System: Objects', () => {
 
     expect(TypeWithDeprecatedField.getFields().bar).to.include({
       name: 'bar',
-      isDeprecated: true,
       deprecationReason: 'A terrible reason',
     });
 
     expect(TypeWithDeprecatedField.getFields().baz).to.include({
       name: 'baz',
-      isDeprecated: true,
       deprecationReason: '',
     });
   });
@@ -251,7 +249,6 @@ describe('Type System: Objects', () => {
         args: [],
         resolve: undefined,
         subscribe: undefined,
-        isDeprecated: false,
         deprecationReason: undefined,
         extensions: undefined,
         astNode: undefined,
@@ -289,7 +286,6 @@ describe('Type System: Objects', () => {
         ],
         resolve: undefined,
         subscribe: undefined,
-        isDeprecated: false,
         deprecationReason: undefined,
         extensions: undefined,
         astNode: undefined,
@@ -381,20 +377,6 @@ describe('Type System: Objects', () => {
     });
     expect(() => objType.getFields()).to.throw(
       'SomeObject.badField args must be an object with argument names as keys.',
-    );
-  });
-
-  it('rejects an Object type with an isDeprecated instead of deprecationReason on field', () => {
-    const OldObject = new GraphQLObjectType({
-      name: 'OldObject',
-      // $FlowExpectedError[incompatible-call]
-      fields: {
-        field: { type: ScalarType, isDeprecated: true },
-      },
-    });
-
-    expect(() => OldObject.getFields()).to.throw(
-      'OldObject.field should provide "deprecationReason" instead of "isDeprecated".',
     );
   });
 
@@ -621,13 +603,11 @@ describe('Type System: Enums', () => {
 
     expect(EnumTypeWithDeprecatedValue.getValues()[0]).to.include({
       name: 'foo',
-      isDeprecated: true,
       deprecationReason: 'Just because',
     });
 
     expect(EnumTypeWithDeprecatedValue.getValues()[1]).to.include({
       name: 'bar',
-      isDeprecated: true,
       deprecationReason: '',
     });
   });
@@ -647,7 +627,6 @@ describe('Type System: Enums', () => {
         name: 'NULL',
         description: undefined,
         value: null,
-        isDeprecated: false,
         deprecationReason: undefined,
         extensions: undefined,
         astNode: undefined,
@@ -656,7 +635,6 @@ describe('Type System: Enums', () => {
         name: 'NAN',
         description: undefined,
         value: NaN,
-        isDeprecated: false,
         deprecationReason: undefined,
         extensions: undefined,
         astNode: undefined,
@@ -665,7 +643,6 @@ describe('Type System: Enums', () => {
         name: 'NO_CUSTOM_VALUE',
         description: undefined,
         value: 'NO_CUSTOM_VALUE',
-        isDeprecated: false,
         deprecationReason: undefined,
         extensions: undefined,
         astNode: undefined,
@@ -738,21 +715,6 @@ describe('Type System: Enums', () => {
         }),
     ).to.throw(
       'SomeEnum.FOO must refer to an object with a "value" key representing an internal value but got: 10.',
-    );
-  });
-
-  it('does not allow isDeprecated instead of deprecationReason on enum', () => {
-    expect(
-      () =>
-        new GraphQLEnumType({
-          name: 'SomeEnum',
-          // $FlowExpectedError[prop-missing]
-          values: {
-            FOO: { isDeprecated: true },
-          },
-        }),
-    ).to.throw(
-      'SomeEnum.FOO should provide "deprecationReason" instead of "isDeprecated".',
     );
   });
 });

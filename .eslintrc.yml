@@ -51,8 +51,8 @@ rules:
   node/no-unpublished-import: error
   node/no-unpublished-require: error
   node/no-unsupported-features/es-builtins: error
-  node/no-unsupported-features/es-syntax: off # TODO enable
-  node/no-unsupported-features/node-builtins: off # TODO enable
+  node/no-unsupported-features/es-syntax: [error, { ignores: [modules] }]
+  node/no-unsupported-features/node-builtins: error
   node/process-exit-as-throw: error
   node/shebang: error
 
@@ -136,14 +136,14 @@ rules:
   import/max-dependencies: off
   import/no-unassigned-import: error
   import/no-named-default: error
-  import/no-default-export: off
+  import/no-default-export: error
   import/no-named-export: off
   import/no-anonymous-default-export: error
   import/group-exports: off
   import/dynamic-import-chunkname: off
 
   ##############################################################################
-  # ESLint builtin rules list based on `v7.13.x`
+  # ESLint builtin rules list based on `v7.24.x`
   ##############################################################################
 
   # Possible Errors
@@ -185,6 +185,7 @@ rules:
   no-unreachable-loop: error
   no-unsafe-finally: error
   no-unsafe-negation: error
+  no-unsafe-optional-chaining: [error, { disallowArithmeticOperators: true }]
   no-useless-backreference: error
   require-atomic-updates: error
   use-isnan: error
@@ -236,6 +237,7 @@ rules:
   no-new: error
   no-new-func: error
   no-new-wrappers: error
+  no-nonoctal-decimal-escape: error
   no-octal: error
   no-octal-escape: error
   no-param-reassign: error
@@ -296,7 +298,7 @@ rules:
   capitalized-comments: off # maybe
   consistent-this: off
   func-name-matching: off
-  func-names: off
+  func-names: [error, as-needed] # improve debug experience
   func-style: off
   id-denylist: off
   id-length: off
@@ -323,13 +325,7 @@ rules:
   no-nested-ternary: off
   no-new-object: error
   no-plusplus: off
-  no-restricted-syntax:
-    - error
-    - selector: 'FunctionDeclaration[async=true]'
-      message: >
-        async functions are not allowed inside package source code because
-        older versions of NodeJS do not support them without additional
-        runtime dependencies. Instead, use explicit Promises.
+  no-restricted-syntax: off
   no-tabs: error
   no-ternary: off
   no-underscore-dangle: off # TODO
@@ -440,7 +436,7 @@ rules:
 
 overrides:
   - files: 'src/**/*.js'
-    parser: babel-eslint
+    parser: '@babel/eslint-parser'
     parserOptions:
       sourceType: module
     plugins:
@@ -448,7 +444,7 @@ overrides:
 
     rules:
       ##############################################################################
-      # `eslint-plugin-flowtype` rule list based on `v5.2.x`
+      # `eslint-plugin-flowtype` rule list based on `v5.6.x`
       # https://github.com/gajus/eslint-plugin-flowtype#eslint-plugin-flowtype
       ##############################################################################
 
@@ -459,6 +455,7 @@ overrides:
       flowtype/no-dupe-keys: error
       flowtype/no-existential-type: off # checked by Flow
       flowtype/no-flow-fix-me-comments: off
+      flowtype/no-internal-flow-type: error
       flowtype/no-mixed: off
       flowtype/no-mutable-array: off
       flowtype/no-primitive-constructor-types: error
@@ -479,6 +476,7 @@ overrides:
       flowtype/spread-exact-type: off
       flowtype/type-id-match: [error, '^[A-Z]']
       flowtype/type-import-style: [error, declaration]
+      flowtype/use-read-only-spread: error
       flowtype/use-flow-type: error
 
       # Bellow rules are disabled because coflicts with Prettier, see:
@@ -487,6 +485,7 @@ overrides:
       flowtype/boolean-style: off
       flowtype/delimiter-dangle: off
       flowtype/generic-spacing: off
+      flowtype/object-type-curly-spacing: off
       flowtype/object-type-delimiter: off
       flowtype/semi: off
       flowtype/space-after-type-colon: off
@@ -504,7 +503,7 @@ overrides:
       - plugin:import/typescript
     rules:
       ##########################################################################
-      # `@typescript-eslint/eslint-plugin` rule list based on `v4.8.x`
+      # `@typescript-eslint/eslint-plugin` rule list based on `v4.21.x`
       ##########################################################################
 
       # Supported Rules
@@ -558,11 +557,13 @@ overrides:
       '@typescript-eslint/no-unnecessary-type-arguments': error
       '@typescript-eslint/no-unnecessary-type-assertion': error
       '@typescript-eslint/no-unnecessary-type-constraint': off # TODO consider
+      '@typescript-eslint/no-unsafe-argument': off # TODO consider
       '@typescript-eslint/no-unsafe-assignment': off # TODO consider
       '@typescript-eslint/no-unsafe-call': off # TODO consider
       '@typescript-eslint/no-unsafe-member-access': off # TODO consider
       '@typescript-eslint/no-unsafe-return': off # TODO consider
       '@typescript-eslint/no-var-requires': error
+      '@typescript-eslint/non-nullable-type-assertion-style': error
       '@typescript-eslint/prefer-as-const': off # TODO consider
       '@typescript-eslint/prefer-enum-initializers': off # TODO consider
       '@typescript-eslint/prefer-for-of': off # TODO switch to error after TS migration
@@ -583,6 +584,7 @@ overrides:
       '@typescript-eslint/restrict-plus-operands':
         [error, { checkCompoundAssignments: true }]
       '@typescript-eslint/restrict-template-expressions': error
+      '@typescript-eslint/sort-type-union-intersection-members': off # TODO consider
       '@typescript-eslint/strict-boolean-expressions': off # TODO consider
       '@typescript-eslint/switch-exhaustiveness-check': error
       '@typescript-eslint/triple-slash-reference': error
@@ -645,6 +647,7 @@ overrides:
 
       # Bellow rules are disabled because coflicts with Prettier, see:
       # https://github.com/prettier/eslint-config-prettier/blob/master/%40typescript-eslint.js
+      '@typescript-eslint/object-curly-spacing': off
       '@typescript-eslint/quotes': off
       '@typescript-eslint/brace-style': off
       '@typescript-eslint/comma-dangle': off
@@ -664,17 +667,16 @@ overrides:
       node/no-unpublished-import: [error, { allowModules: ['chai', 'mocha'] }]
       import/no-restricted-paths: off
       import/no-extraneous-dependencies: [error, { devDependencies: true }]
-      no-restricted-syntax: off
   - files: 'integrationTests/*'
     rules:
-      node/no-unpublished-require: off
       node/no-sync: off
+      node/no-unpublished-require: [error, { allowModules: ['mocha'] }]
       import/no-extraneous-dependencies: [error, { devDependencies: true }]
       import/no-nodejs-modules: off
   - files: 'integrationTests/*/**'
     rules:
       node/no-sync: off
-      node/no-missing-require: off
+      node/no-missing-require: [error, { allowModules: ['graphql'] }]
       import/no-nodejs-modules: off
       no-console: off
   - files: 'benchmark/**'
@@ -685,18 +687,11 @@ overrides:
       import/no-commonjs: off
       no-console: off
       no-await-in-loop: off
-      no-restricted-syntax: off
   - files: 'resources/**'
     rules:
-      node/no-unpublished-import: off
       node/no-unpublished-require: off
-      node/no-missing-require: off
       node/no-sync: off
-      node/global-require: off
-      import/no-dynamic-require: off
       import/no-extraneous-dependencies: [error, { devDependencies: true }]
       import/no-nodejs-modules: off
       import/no-commonjs: off
-      no-await-in-loop: off
-      no-restricted-syntax: off
       no-console: off

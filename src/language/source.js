@@ -1,8 +1,6 @@
-import { SYMBOL_TO_STRING_TAG } from '../polyfills/symbols';
-
-import inspect from '../jsutils/inspect';
-import devAssert from '../jsutils/devAssert';
-import instanceOf from '../jsutils/instanceOf';
+import { inspect } from '../jsutils/inspect';
+import { devAssert } from '../jsutils/devAssert';
+import { instanceOf } from '../jsutils/instanceOf';
 
 type Location = {|
   line: number,
@@ -25,7 +23,7 @@ export class Source {
     body: string,
     name: string = 'GraphQL request',
     locationOffset: Location = { line: 1, column: 1 },
-  ): void {
+  ) {
     devAssert(
       typeof body === 'string',
       `Body must be a string. Received: ${inspect(body)}.`,
@@ -45,7 +43,7 @@ export class Source {
   }
 
   // $FlowFixMe[unsupported-syntax] Flow doesn't support computed properties yet
-  get [SYMBOL_TO_STRING_TAG]() {
+  get [Symbol.toStringTag]() {
     return 'Source';
   }
 }

@@ -1,8 +1,7 @@
 // FIXME:
 // flowlint uninitialized-instance-property:off
 
-import isObjectLike from '../jsutils/isObjectLike';
-import { SYMBOL_TO_STRING_TAG } from '../polyfills/symbols';
+import { isObjectLike } from '../jsutils/isObjectLike';
 
 import type { ASTNode } from '../language/ast';
 import type { Source } from '../language/source';
@@ -83,7 +82,7 @@ export class GraphQLError extends Error {
     path?: ?$ReadOnlyArray<string | number>,
     originalError?: ?(Error & { +extensions?: mixed, ... }),
     extensions?: ?{ [key: string]: mixed, ... },
-  ): void {
+  ) {
     super(message);
 
     // Compute list of blame nodes.
@@ -103,12 +102,12 @@ export class GraphQLError extends Error {
 
     let _positions = positions;
     if (!_positions && _nodes) {
-      _positions = _nodes.reduce((list, node) => {
+      _positions = [];
+      for (const node of _nodes) {
         if (node.loc) {
-          list.push(node.loc.start);
+          _positions.push(node.loc.start);
         }
-        return list;
-      }, []);
+      }
     }
     if (_positions && _positions.length === 0) {
       _positions = undefined;
@@ -118,12 +117,12 @@ export class GraphQLError extends Error {
     if (positions && source) {
       _locations = positions.map((pos) => getLocation(source, pos));
     } else if (_nodes) {
-      _locations = _nodes.reduce((list, node) => {
+      _locations = [];
+      for (const node of _nodes) {
         if (node.loc) {
-          list.push(getLocation(node.loc.source, node.loc.start));
+          _locations.push(getLocation(node.loc.source, node.loc.start));
         }
-        return list;
-      }, []);
+      }
     }
 
     let _extensions = extensions;
@@ -213,7 +212,7 @@ export class GraphQLError extends Error {
 
   // FIXME: workaround to not break chai comparisons, should be remove in v16
   // $FlowFixMe[unsupported-syntax] Flow doesn't support computed properties yet
-  get [SYMBOL_TO_STRING_TAG](): string {
+  get [Symbol.toStringTag](): string {
     return 'Object';
   }
 }

@@ -17,13 +17,14 @@ import type { ObjMap } from './ObjMap';
  *     )
  *
  */
-export default function keyValMap<T, V>(
+export function keyValMap<T, V>(
   list: $ReadOnlyArray<T>,
   keyFn: (item: T) => string,
   valFn: (item: T) => V,
 ): ObjMap<V> {
-  return list.reduce((map, item) => {
-    map[keyFn(item)] = valFn(item);
-    return map;
-  }, Object.create(null));
+  const result = Object.create(null);
+  for (const item of list) {
+    result[keyFn(item)] = valFn(item);
+  }
+  return result;
 }

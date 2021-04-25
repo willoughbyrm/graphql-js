@@ -1,8 +1,7 @@
-import objectValues from '../polyfills/objectValues';
-
-import keyMap from '../jsutils/keyMap';
-import inspect from '../jsutils/inspect';
-import invariant from '../jsutils/invariant';
+import { keyMap } from '../jsutils/keyMap';
+import { inspect } from '../jsutils/inspect';
+import { invariant } from '../jsutils/invariant';
+import { naturalCompare } from '../jsutils/naturalCompare';
 
 import { print } from '../language/printer';
 import { visit } from '../language/visitor';
@@ -157,7 +156,7 @@ function findDirectiveChanges(
     }
 
     for (const location of oldDirective.locations) {
-      if (newDirective.locations.indexOf(location) === -1) {
+      if (!newDirective.locations.includes(location)) {
         schemaChanges.push({
           type: BreakingChangeType.DIRECTIVE_LOCATION_REMOVED,
           description: `${location} was removed from ${oldDirective.name}.`,
@@ -176,8 +175,8 @@ function findTypeChanges(
   const schemaChanges = [];
 
   const typesDiff = diff(
-    objectValues(oldSchema.getTypeMap()),
-    objectValues(newSchema.getTypeMap()),
+    Object.values(oldSchema.getTypeMap()),
+    Object.values(newSchema.getTypeMap()),
   );
 
   for (const oldType of typesDiff.removed) {
@@ -225,8 +224,8 @@ function findInputObjectTypeChanges(
 ): Array<BreakingChange | DangerousChange> {
   const schemaChanges = [];
   const fieldsDiff = diff(
-    objectValues(oldType.getFields()),
-    objectValues(newType.getFields()),
+    Object.values(oldType.getFields()),
+    Object.values(newType.getFields()),
   );
 
   for (const newField of fieldsDiff.added) {
@@ -346,8 +345,8 @@ function findFieldChanges(
 ): Array<BreakingChange | DangerousChange> {
   const schemaChanges = [];
   const fieldsDiff = diff(
-    objectValues(oldType.getFields()),
-    objectValues(newType.getFields()),
+    Object.values(oldType.getFields()),
+    Object.values(newType.getFields()),
   );
 
   for (const oldField of fieldsDiff.removed) {
@@ -541,8 +540,11 @@ function stringifyValue(value: mixed, type: GraphQLInputType): string {
 
   const sortedAST = visit(ast, {
     ObjectValue(objectNode) {
-      const fields = [...objectNode.fields].sort((fieldA, fieldB) =>
-        fieldA.name.value.localeCompare(fieldB.name.value),
+      // Make a copy since sort mutates array
+      const fields = [...objectNode.fields];
+
+      fields.sort((fieldA, fieldB) =>
+        naturalCompare(fieldA.name.value, fieldB.name.value),
       );
       return { ...objectNode, fields };
     },

@@ -1,12 +1,9 @@
-// eslint-disable-next-line import/no-nodejs-modules
-import { inspect as nodeInspect } from 'util';
-
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import dedent from '../../__testUtils__/dedent';
+import { dedent } from '../../__testUtils__/dedent';
 
-import inspect from '../../jsutils/inspect';
+import { inspect } from '../../jsutils/inspect';
 
 import { GraphQLError } from '../../error/GraphQLError';
 
@@ -121,9 +118,6 @@ describe('Lexer', () => {
     expect(JSON.stringify(token)).to.equal(
       '{"kind":"Name","value":"foo","line":1,"column":1}',
     );
-    expect(nodeInspect(token)).to.equal(
-      "{ kind: 'Name', value: 'foo', line: 1, column: 1 }",
-    );
     expect(inspect(token)).to.equal(
       '{ kind: "Name", value: "foo", line: 1, column: 1 }',
     );
@@ -171,7 +165,7 @@ describe('Lexer', () => {
     } catch (error) {
       caughtError = error;
     }
-    expect(String(caughtError) + '\n').to.equal(dedent`
+    expect(String(caughtError)).to.equal(dedent`
       Syntax Error: Cannot parse the unexpected character "?".
 
       GraphQL request:3:5
@@ -191,7 +185,7 @@ describe('Lexer', () => {
     } catch (error) {
       caughtError = error;
     }
-    expect(String(caughtError) + '\n').to.equal(dedent`
+    expect(String(caughtError)).to.equal(dedent`
       Syntax Error: Cannot parse the unexpected character "?".
 
       foo.js:13:6
@@ -210,7 +204,7 @@ describe('Lexer', () => {
     } catch (error) {
       caughtError = error;
     }
-    expect(String(caughtError) + '\n').to.equal(dedent`
+    expect(String(caughtError)).to.equal(dedent`
       Syntax Error: Cannot parse the unexpected character "?".
 
       foo.js:1:5

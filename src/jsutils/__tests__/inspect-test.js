@@ -1,9 +1,7 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import inspect from '../inspect';
-import invariant from '../invariant';
-import nodejsCustomInspectSymbol from '../nodejsCustomInspectSymbol';
+import { inspect } from '../inspect';
 
 describe('inspect', () => {
   it('undefined', () => {
@@ -36,13 +34,13 @@ describe('inspect', () => {
   it('function', () => {
     const unnamedFuncStr = inspect(
       // istanbul ignore next (Never called and used as a placeholder)
-      () => invariant(false),
+      () => expect.fail('Should not be called'),
     );
     expect(unnamedFuncStr).to.equal('[function]');
 
     // istanbul ignore next (Never called and used as a placeholder)
     function namedFunc() {
-      invariant(false);
+      expect.fail('Should not be called');
     }
     expect(inspect(namedFunc)).to.equal('[function namedFunc]');
   });
@@ -84,54 +82,40 @@ describe('inspect', () => {
     expect(inspect(map)).to.equal('{ a: true, b: null }');
   });
 
-  it('custom inspect', () => {
+  it('use toJSON if provided', () => {
     const object = {
-      inspect() {
-        return '<custom inspect>';
+      toJSON() {
+        return '<json value>';
       },
     };
 
-    expect(inspect(object)).to.equal('<custom inspect>');
+    expect(inspect(object)).to.equal('<json value>');
   });
 
-  it('custom inspect that return `this` should work', () => {
+  it('handles toJSON that return `this` should work', () => {
     const object = {
-      inspect() {
+      toJSON() {
         return this;
       },
     };
 
-    expect(inspect(object)).to.equal('{ inspect: [function inspect] }');
+    expect(inspect(object)).to.equal('{ toJSON: [function toJSON] }');
   });
 
-  it('custom symbol inspect is take precedence', () => {
+  it('handles toJSON returning object values', () => {
     const object = {
-      // istanbul ignore next (Never called and use just as a placeholder)
-      inspect() {
-        invariant(false);
-      },
-      [String(nodejsCustomInspectSymbol)]() {
-        return '<custom symbol inspect>';
+      toJSON() {
+        return { json: 'value' };
       },
     };
 
-    expect(inspect(object)).to.equal('<custom symbol inspect>');
+    expect(inspect(object)).to.equal('{ json: "value" }');
   });
 
-  it('custom inspect returning object values', () => {
-    const object = {
-      inspect() {
-        return { custom: 'inspect' };
-      },
-    };
-
-    expect(inspect(object)).to.equal('{ custom: "inspect" }');
-  });
-
-  it('custom inspect function that uses this', () => {
+  it('handles toJSON function that uses this', () => {
     const object = {
       str: 'Hello World!',
-      inspect() {
+      toJSON() {
         return this.str;
       },
     };
@@ -160,11 +144,11 @@ describe('inspect', () => {
     expect(inspect(mixed)).to.equal('{ array: [[Circular]] }');
 
     const customA = {
-      inspect: () => customB,
+      toJSON: () => customB,
     };
 
     const customB = {
-      inspect: () => customA,
+      toJSON: () => customA,
     };
 
     expect(inspect(customA)).to.equal('[Circular]');
@@ -184,6 +168,7 @@ describe('inspect', () => {
     (Foo.prototype: any)[Symbol.toStringTag] = 'Bar';
     expect(inspect([[new Foo()]])).to.equal('[[[Bar]]]');
 
+    // eslint-disable-next-line func-names
     const objectWithoutClassName = new (function () {
       // eslint-disable-next-line no-invalid-this
       this.foo = 1;

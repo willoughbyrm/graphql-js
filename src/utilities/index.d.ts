@@ -46,12 +46,7 @@ export {
 } from './buildASTSchema';
 
 // Extends an existing GraphQLSchema from a parsed GraphQL Schema language AST.
-export {
-  extendSchema,
-  // @deprecated: Get the description from a schema AST node and supports legacy
-  // syntax for specifying descriptions - will be removed in v16
-  getDescription,
-} from './extendSchema';
+export { extendSchema } from './extendSchema';
 
 // Sort a GraphQLSchema.
 export { lexicographicSortSchema } from './lexicographicSortSchema';
@@ -114,6 +109,3 @@ export {
 
 // Wrapper type that contains DocumentNode and types that can be deduced from it.
 export { TypedQueryDocumentNode } from './typedQueryDocumentNode';
-
-// @deprecated: Report all deprecated usage within a GraphQL document.
-export { findDeprecatedUsages } from './findDeprecatedUsages';

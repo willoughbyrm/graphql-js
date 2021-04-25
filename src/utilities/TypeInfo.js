@@ -1,7 +1,5 @@
-import find from '../polyfills/find';
-
-import type { Visitor } from '../language/visitor';
-import type { ASTNode, ASTKindToNode, FieldNode } from '../language/ast';
+import type { ASTVisitor } from '../language/visitor';
+import type { ASTNode, FieldNode } from '../language/ast';
 import { Kind } from '../language/kinds';
 import { isNode } from '../language/ast';
 import { getVisitFn } from '../language/visitor';
@@ -57,14 +55,13 @@ export class TypeInfo {
 
   constructor(
     schema: GraphQLSchema,
-    // NOTE: this experimental optional second parameter is only needed in order
-    // to support non-spec-compliant code bases. You should never need to use it.
-    // It may disappear in the future.
-    getFieldDefFn?: typeof getFieldDef,
     // Initial type may be provided in rare cases to facilitate traversals
     // beginning somewhere other than documents.
-    initialType?: GraphQLType,
-  ): void {
+    initialType?: ?GraphQLType,
+
+    // @deprecated will be removed in 17.0.0
+    getFieldDefFn?: typeof getFieldDef,
+  ) {
     this._schema = schema;
     this._typeStack = [];
     this._parentTypeStack = [];
@@ -204,8 +201,7 @@ export class TypeInfo {
         let argType: mixed;
         const fieldOrDirective = this.getDirective() ?? this.getFieldDef();
         if (fieldOrDirective) {
-          argDef = find(
-            fieldOrDirective.args,
+          argDef = fieldOrDirective.args.find(
             (arg) => arg.name === node.name.value,
           );
           if (argDef) {
@@ -328,8 +324,8 @@ function getFieldDef(
  */
 export function visitWithTypeInfo(
   typeInfo: TypeInfo,
-  visitor: Visitor<ASTKindToNode>,
-): Visitor<ASTKindToNode> {
+  visitor: ASTVisitor,
+): ASTVisitor {
   return {
     enter(node) {
       typeInfo.enter(node);

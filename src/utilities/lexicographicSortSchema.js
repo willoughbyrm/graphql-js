@@ -1,9 +1,8 @@
-import objectValues from '../polyfills/objectValues';
-
 import type { ObjMap } from '../jsutils/ObjMap';
-import inspect from '../jsutils/inspect';
-import invariant from '../jsutils/invariant';
-import keyValMap from '../jsutils/keyValMap';
+import { inspect } from '../jsutils/inspect';
+import { invariant } from '../jsutils/invariant';
+import { keyValMap } from '../jsutils/keyValMap';
+import { naturalCompare } from '../jsutils/naturalCompare';
 
 import type {
   GraphQLType,
@@ -48,7 +47,7 @@ export function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema {
 
   return new GraphQLSchema({
     ...schemaConfig,
-    types: objectValues(typeMap),
+    types: Object.values(typeMap),
     directives: sortByName(schemaConfig.directives).map(sortDirective),
     query: replaceMaybeType(schemaConfig.query),
     mutation: replaceMaybeType(schemaConfig.mutation),
@@ -109,7 +108,7 @@ export function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema {
     return sortByName(arr).map(replaceNamedType);
   }
 
-  function sortNamedType<T: GraphQLNamedType>(type: T) {
+  function sortNamedType(type: GraphQLNamedType): GraphQLNamedType {
     if (isScalarType(type) || isIntrospectionType(type)) {
       return type;
     }
@@ -140,7 +139,7 @@ export function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema {
       const config = type.toConfig();
       return new GraphQLEnumType({
         ...config,
-        values: sortObjMap(config.values),
+        values: sortObjMap(config.values, (value) => value),
       });
     }
     // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
@@ -157,12 +156,11 @@ export function lexicographicSortSchema(schema: GraphQLSchema): GraphQLSchema {
   }
 }
 
-function sortObjMap<T, R>(map: ObjMap<T>, sortValueFn?: (T) => R): ObjMap<R> {
+function sortObjMap<T, R>(map: ObjMap<T>, sortValueFn: (T) => R): ObjMap<R> {
   const sortedMap = Object.create(null);
-  const sortedKeys = sortBy(Object.keys(map), (x) => x);
-  for (const key of sortedKeys) {
-    const value = map[key];
-    sortedMap[key] = sortValueFn ? sortValueFn(value) : value;
+  const sortedEntries = sortBy(Object.entries(map), ([key]) => key);
+  for (const [key, value] of sortedEntries) {
+    sortedMap[key] = sortValueFn(value);
   }
   return sortedMap;
 }
@@ -180,6 +178,6 @@ function sortBy<T>(
   return array.slice().sort((obj1, obj2) => {
     const key1 = mapToKey(obj1);
     const key2 = mapToKey(obj2);
-    return key1.localeCompare(key2);
+    return naturalCompare(key1, key2);
   });
 }

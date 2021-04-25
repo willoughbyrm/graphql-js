@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import dedent from '../../__testUtils__/dedent';
-import inspectStr from '../../__testUtils__/inspectStr';
-import kitchenSinkSDL from '../../__testUtils__/kitchenSinkSDL';
-import kitchenSinkQuery from '../../__testUtils__/kitchenSinkQuery';
+import { dedent } from '../../__testUtils__/dedent';
+import { inspectStr } from '../../__testUtils__/inspectStr';
+import { kitchenSinkSDL } from '../../__testUtils__/kitchenSinkSDL';
+import { kitchenSinkQuery } from '../../__testUtils__/kitchenSinkQuery';
 
-import invariant from '../../jsutils/invariant';
+import { invariant } from '../../jsutils/invariant';
 
 import { Lexer } from '../../language/lexer';
 import { parse } from '../../language/parser';
@@ -147,7 +147,7 @@ describe('stripIgnoredCharacters', () => {
       caughtError = e;
     }
 
-    expect(String(caughtError) + '\n').to.equal(dedent`
+    expect(String(caughtError)).to.equal(dedent`
       Syntax Error: Unterminated string.
 
       GraphQL request:1:13
@@ -370,7 +370,7 @@ describe('stripIgnoredCharacters', () => {
     expectStripped('""",|"""').toStayTheSame();
 
     const ignoredTokensWithoutFormatting = ignoredTokens.filter(
-      (token) => ['\n', '\r', '\r\n', '\t', ' '].indexOf(token) === -1,
+      (token) => !['\n', '\r', '\r\n', '\t', ' '].includes(token),
     );
     for (const ignored of ignoredTokensWithoutFormatting) {
       expectStripped('"""|' + ignored + '|"""').toStayTheSame();

@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 import type { ObjMap } from '../../jsutils/ObjMap';
-import invariant from '../../jsutils/invariant';
-import identityFunc from '../../jsutils/identityFunc';
+import { invariant } from '../../jsutils/invariant';
+import { identityFunc } from '../../jsutils/identityFunc';
 
 import { parseValue } from '../../language/parser';
 
@@ -29,7 +29,7 @@ describe('valueFromAST', () => {
   function expectValueFrom(
     valueText: string,
     type: GraphQLInputType,
-    variables: ?ObjMap<mixed>,
+    variables?: ObjMap<mixed>,
   ) {
     const ast = parseValue(valueText);
     const value = valueFromAST(ast, type, variables);

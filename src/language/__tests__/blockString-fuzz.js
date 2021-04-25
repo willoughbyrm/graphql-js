@@ -1,19 +1,20 @@
 import { describe, it } from 'mocha';
 
-import dedent from '../../__testUtils__/dedent';
-import inspectStr from '../../__testUtils__/inspectStr';
-import genFuzzStrings from '../../__testUtils__/genFuzzStrings';
+import { dedent } from '../../__testUtils__/dedent';
+import { inspectStr } from '../../__testUtils__/inspectStr';
+import { genFuzzStrings } from '../../__testUtils__/genFuzzStrings';
 
-import invariant from '../../jsutils/invariant';
+import { invariant } from '../../jsutils/invariant';
 
 import { Lexer } from '../lexer';
 import { Source } from '../source';
 import { printBlockString } from '../blockString';
 
-function lexValue(str: string) {
+function lexValue(str: string): string {
   const lexer = new Lexer(new Source(str));
   const value = lexer.advance().value;
 
+  invariant(typeof value === 'string');
   invariant(lexer.advance().kind === '<EOF>', 'Expected EOF');
   return value;
 }
@@ -48,15 +49,13 @@ describe('printBlockString', () => {
       );
 
       const printedMultilineString = lexValue(
-        printBlockString(testValue, ' ', true),
+        printBlockString(testValue, true),
       );
 
       invariant(
         testValue === printedMultilineString,
         dedent`
-          Expected lexValue(printBlockString(${inspectStr(
-            testValue,
-          )}, ' ', true))
+          Expected lexValue(printBlockString(${inspectStr(testValue)}, true))
             to equal ${inspectStr(testValue)}
             but got  ${inspectStr(printedMultilineString)}
         `,

@@ -1,4 +1,4 @@
-// Minimum TypeScript Version: 2.6
+// Minimum TypeScript Version: 3.7
 
 /**
  * GraphQL.js provides a reference implementation for the GraphQL specification
@@ -137,7 +137,8 @@ export {
   GraphQLWrappingType,
   GraphQLNullableType,
   GraphQLNamedType,
-  Thunk,
+  ThunkArray,
+  ThunkObjMap,
   GraphQLSchemaConfig,
   GraphQLSchemaExtensions,
   GraphQLDirectiveConfig,
@@ -227,9 +228,7 @@ export {
   DirectiveLocationEnum,
   // Visitor utilities
   ASTVisitor,
-  Visitor,
-  VisitFn,
-  VisitorKeyMap,
+  ASTVisitFn,
   // AST nodes
   ASTNode,
   ASTKindToNode,
@@ -382,9 +381,6 @@ export {
   buildASTSchema,
   // Build a GraphQLSchema from a GraphQL schema language document.
   buildSchema,
-  // @deprecated: Get the description from a schema AST node and supports legacy
-  // syntax for specifying descriptions - will be removed in v16.
-  getDescription,
   // Extends an existing GraphQLSchema from a parsed GraphQL Schema
   // language AST.
   extendSchema,
@@ -431,8 +427,6 @@ export {
   DangerousChangeType,
   findBreakingChanges,
   findDangerousChanges,
-  // @deprecated: Report all deprecated usage within a GraphQL document.
-  findDeprecatedUsages,
 } from './utilities/index';
 
 export {

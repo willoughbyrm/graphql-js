@@ -1,8 +1,6 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import invariant from '../../jsutils/invariant';
-
 import { buildSchema } from '../../utilities/buildASTSchema';
 import { getIntrospectionQuery } from '../../utilities/getIntrospectionQuery';
 
@@ -37,7 +35,7 @@ describe('Introspection', () => {
             {
               kind: 'OBJECT',
               name: 'SomeObject',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: [
                 {
                   name: 'someField',
@@ -59,7 +57,7 @@ describe('Introspection', () => {
             {
               kind: 'SCALAR',
               name: 'String',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: null,
               inputFields: null,
               interfaces: null,
@@ -69,7 +67,7 @@ describe('Introspection', () => {
             {
               kind: 'SCALAR',
               name: 'Boolean',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: null,
               inputFields: null,
               interfaces: null,
@@ -79,7 +77,7 @@ describe('Introspection', () => {
             {
               kind: 'OBJECT',
               name: '__Schema',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: [
                 {
                   name: 'description',
@@ -184,7 +182,7 @@ describe('Introspection', () => {
             {
               kind: 'OBJECT',
               name: '__Type',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: [
                 {
                   name: 'kind',
@@ -224,7 +222,7 @@ describe('Introspection', () => {
                   deprecationReason: null,
                 },
                 {
-                  name: 'specifiedByUrl',
+                  name: 'specifiedByURL',
                   args: [],
                   type: {
                     kind: 'SCALAR',
@@ -379,7 +377,7 @@ describe('Introspection', () => {
             {
               kind: 'ENUM',
               name: '__TypeKind',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: null,
               inputFields: null,
               interfaces: null,
@@ -430,7 +428,7 @@ describe('Introspection', () => {
             {
               kind: 'OBJECT',
               name: '__Field',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: [
                 {
                   name: 'name',
@@ -541,7 +539,7 @@ describe('Introspection', () => {
             {
               kind: 'OBJECT',
               name: '__InputValue',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: [
                 {
                   name: 'name',
@@ -630,7 +628,7 @@ describe('Introspection', () => {
             {
               kind: 'OBJECT',
               name: '__EnumValue',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: [
                 {
                   name: 'name',
@@ -693,7 +691,7 @@ describe('Introspection', () => {
             {
               kind: 'OBJECT',
               name: '__Directive',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: [
                 {
                   name: 'name',
@@ -791,7 +789,7 @@ describe('Introspection', () => {
             {
               kind: 'ENUM',
               name: '__DirectiveLocation',
-              specifiedByUrl: null,
+              specifiedByURL: null,
               fields: null,
               inputFields: null,
               interfaces: null,
@@ -1569,21 +1567,20 @@ describe('Introspection', () => {
 
     // istanbul ignore next (Called only to fail test)
     function fieldResolver(_1, _2, _3, info) {
-      invariant(false, `Called on ${info.parentType.name}::${info.fieldName}`);
+      expect.fail(`Called on ${info.parentType.name}::${info.fieldName}`);
     }
 
     // istanbul ignore next (Called only to fail test)
     function typeResolver(_1, _2, info) {
-      invariant(false, `Called on ${info.parentType.name}::${info.fieldName}`);
+      expect.fail(`Called on ${info.parentType.name}::${info.fieldName}`);
     }
 
-    expect(() =>
-      graphqlSync({
-        schema,
-        source,
-        fieldResolver,
-        typeResolver,
-      }),
-    ).to.not.throw();
+    const result = graphqlSync({
+      schema,
+      source,
+      fieldResolver,
+      typeResolver,
+    });
+    expect(result).to.not.have.property('errors');
   });
 });

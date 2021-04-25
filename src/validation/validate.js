@@ -1,4 +1,4 @@
-import devAssert from '../jsutils/devAssert';
+import { devAssert } from '../jsutils/devAssert';
 
 import { GraphQLError } from '../error/GraphQLError';
 
@@ -33,9 +33,11 @@ import { SDLValidationContext, ValidationContext } from './ValidationContext';
 export function validate(
   schema: GraphQLSchema,
   documentAST: DocumentNode,
-  rules?: $ReadOnlyArray<ValidationRule> = specifiedRules,
-  typeInfo?: TypeInfo = new TypeInfo(schema),
-  options?: {| maxErrors?: number |} = { maxErrors: undefined },
+  rules: $ReadOnlyArray<ValidationRule> = specifiedRules,
+  options: {| maxErrors?: number |} = { maxErrors: undefined },
+
+  // @deprecate will be removed in 17.0.0
+  typeInfo: TypeInfo = new TypeInfo(schema),
 ): $ReadOnlyArray<GraphQLError> {
   devAssert(documentAST, 'Must provide document.');
   // If the schema used for validation is invalid, throw an error.
@@ -81,7 +83,7 @@ export function validate(
 export function validateSDL(
   documentAST: DocumentNode,
   schemaToExtend?: ?GraphQLSchema,
-  rules?: $ReadOnlyArray<SDLValidationRule> = specifiedSDLRules,
+  rules: $ReadOnlyArray<SDLValidationRule> = specifiedSDLRules,
 ): $ReadOnlyArray<GraphQLError> {
   const errors = [];
   const context = new SDLValidationContext(

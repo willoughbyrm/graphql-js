@@ -11,8 +11,8 @@ import { GraphQLFieldConfigArgumentMap, GraphQLArgument } from './definition';
 /**
  * Test if the given value is a GraphQL directive.
  */
-export function isDirective(directive: any): directive is GraphQLDirective;
-export function assertDirective(directive: any): GraphQLDirective;
+export function isDirective(directive: unknown): directive is GraphQLDirective;
+export function assertDirective(directive: unknown): GraphQLDirective;
 
 /**
  * Custom extensions
@@ -24,7 +24,7 @@ export function assertDirective(directive: any): GraphQLDirective;
  * an object which can contain all the values you need.
  */
 export interface GraphQLDirectiveExtensions {
-  [attributeName: string]: any;
+  [attributeName: string]: unknown;
 }
 
 /**
@@ -51,6 +51,7 @@ export class GraphQLDirective {
   toString(): string;
   toJSON(): string;
   inspect(): string;
+  get [Symbol.toStringTag](): string;
 }
 
 export interface GraphQLDirectiveConfig {

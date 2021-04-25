@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import dedent from '../../__testUtils__/dedent';
-import kitchenSinkSDL from '../../__testUtils__/kitchenSinkSDL';
+import { dedent } from '../../__testUtils__/dedent';
+import { kitchenSinkSDL } from '../../__testUtils__/kitchenSinkSDL';
 
 import { parse } from '../parser';
 
-import toJSONDeep from './toJSONDeep';
+import { toJSONDeep } from './toJSONDeep';
 
 function expectSyntaxError(text: string) {
   return expect(() => parse(text)).to.throw();
@@ -98,7 +98,7 @@ describe('Schema Parser', () => {
           loc: { start: 0, end: 30 },
         },
       ],
-      loc: { start: 0, end: 31 },
+      loc: { start: 0, end: 30 },
     });
   });
 
@@ -194,7 +194,7 @@ describe('Schema Parser', () => {
           loc: { start: 0, end: 37 },
         },
       ],
-      loc: { start: 0, end: 38 },
+      loc: { start: 0, end: 37 },
     });
   });
 
@@ -465,7 +465,7 @@ describe('Schema Parser', () => {
           loc: { start: 0, end: 31 },
         },
       ],
-      loc: { start: 0, end: 32 },
+      loc: { start: 0, end: 31 },
     });
   });
 
@@ -703,7 +703,7 @@ describe('Schema Parser', () => {
           loc: { start: 0, end: 35 },
         },
       ],
-      loc: { start: 0, end: 36 },
+      loc: { start: 0, end: 35 },
     });
   });
 
@@ -741,7 +741,7 @@ describe('Schema Parser', () => {
           loc: { start: 0, end: 45 },
         },
       ],
-      loc: { start: 0, end: 46 },
+      loc: { start: 0, end: 45 },
     });
   });
 
@@ -783,7 +783,7 @@ describe('Schema Parser', () => {
           loc: { start: 0, end: 52 },
         },
       ],
-      loc: { start: 0, end: 53 },
+      loc: { start: 0, end: 52 },
     });
   });
 
@@ -825,7 +825,7 @@ describe('Schema Parser', () => {
           loc: { start: 0, end: 48 },
         },
       ],
-      loc: { start: 0, end: 49 },
+      loc: { start: 0, end: 48 },
     });
   });
 
@@ -869,7 +869,7 @@ describe('Schema Parser', () => {
           loc: { start: 0, end: 60 },
         },
       ],
-      loc: { start: 0, end: 61 },
+      loc: { start: 0, end: 60 },
     });
   });
 
@@ -1105,30 +1105,5 @@ input Hello {
 
   it('parses kitchen sink schema', () => {
     expect(() => parse(kitchenSinkSDL)).to.not.throw();
-  });
-
-  it('Option: allowLegacySDLEmptyFields supports type with empty fields', () => {
-    const body = 'type Hello { }';
-    expectSyntaxError(body).to.include({
-      message: 'Syntax Error: Expected Name, found "}".',
-    });
-
-    const doc = parse(body, { allowLegacySDLEmptyFields: true });
-    expect(doc).to.have.deep.nested.property('definitions[0].fields', []);
-  });
-
-  it('Option: allowLegacySDLImplementsInterfaces', () => {
-    const body = 'type Hello implements Wo rld { field: String }';
-    expectSyntaxError(body).to.include({
-      message: 'Syntax Error: Unexpected Name "rld".',
-    });
-
-    const doc = parse(body, { allowLegacySDLImplementsInterfaces: true });
-    expect(
-      toJSONDeep(doc),
-    ).to.have.deep.nested.property('definitions[0].interfaces', [
-      typeNode('Wo', { start: 22, end: 24 }),
-      typeNode('rld', { start: 25, end: 28 }),
-    ]);
   });
 });

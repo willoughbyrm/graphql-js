@@ -1,20 +1,13 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import dedent from '../../__testUtils__/dedent';
-import kitchenSinkQuery from '../../__testUtils__/kitchenSinkQuery';
+import { dedent, dedentString } from '../../__testUtils__/dedent';
+import { kitchenSinkQuery } from '../../__testUtils__/kitchenSinkQuery';
 
 import { parse } from '../parser';
 import { print } from '../printer';
 
 describe('Printer: Query document', () => {
-  it('does not alter ast', () => {
-    const ast = parse(kitchenSinkQuery);
-    const astBefore = JSON.stringify(ast);
-    print(ast);
-    expect(JSON.stringify(ast)).to.equal(astBefore);
-  });
-
   it('prints minimal ast', () => {
     const ast = { kind: 'Field', name: { kind: 'Name', value: 'foo' } };
     expect(print(ast)).to.equal('foo');
@@ -117,12 +110,10 @@ describe('Printer: Query document', () => {
     );
   });
 
-  it('Experimental: prints fragment with variable directives', () => {
+  it('Legacy: prints fragment with variable directives', () => {
     const queryASTWithVariableDirective = parse(
       'fragment Foo($foo: TestType @test) on TestType @testDirective { id }',
-      {
-        experimentalFragmentVariables: true,
-      },
+      { allowLegacyFragmentVariables: true },
     );
     expect(print(queryASTWithVariableDirective)).to.equal(dedent`
       fragment Foo($foo: TestType @test) on TestType @testDirective {
@@ -131,14 +122,14 @@ describe('Printer: Query document', () => {
     `);
   });
 
-  it('Experimental: correctly prints fragment defined variables', () => {
+  it('Legacy: correctly prints fragment defined variables', () => {
     const fragmentWithVariable = parse(
       `
         fragment Foo($a: ComplexType, $b: Boolean = false) on TestType {
           id
         }
       `,
-      { experimentalFragmentVariables: true },
+      { allowLegacyFragmentVariables: true },
     );
     expect(print(fragmentWithVariable)).to.equal(dedent`
       fragment Foo($a: ComplexType, $b: Boolean = false) on TestType {
@@ -147,12 +138,19 @@ describe('Printer: Query document', () => {
     `);
   });
 
-  it('prints kitchen sink', () => {
-    const printed = print(parse(kitchenSinkQuery));
+  it('prints kitchen sink without altering ast', () => {
+    const ast = parse(kitchenSinkQuery, { noLocation: true });
+
+    const astBeforePrintCall = JSON.stringify(ast);
+    const printed = print(ast);
+    const printedAST = parse(printed, { noLocation: true });
+
+    expect(printedAST).to.deep.equal(ast);
+    expect(JSON.stringify(ast)).to.equal(astBeforePrintCall);
 
     expect(printed).to.equal(
       // $FlowFixMe[incompatible-call]
-      dedent(String.raw`
+      dedentString(String.raw`
       query queryName($foo: ComplexType, $site: Site = MOBILE) @onQuery {
         whoever123is: node(id: [123, 456]) {
           id
@@ -200,7 +198,7 @@ describe('Printer: Query document', () => {
           size: $size
           bar: $b
           obj: {key: "value", block: """
-            block string uses \"""
+          block string uses \"""
           """}
         )
       }

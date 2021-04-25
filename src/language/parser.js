@@ -67,27 +67,7 @@ export type ParseOptions = {|
   noLocation?: boolean,
 
   /**
-   * If enabled, the parser will parse empty fields sets in the Schema
-   * Definition Language. Otherwise, the parser will follow the current
-   * specification.
-   *
-   * This option is provided to ease adoption of the final SDL specification
-   * and will be removed in v16.
-   */
-  allowLegacySDLEmptyFields?: boolean,
-
-  /**
-   * If enabled, the parser will parse implemented interfaces with no `&`
-   * character between each interface. Otherwise, the parser will follow the
-   * current specification.
-   *
-   * This option is provided to ease adoption of the final SDL specification
-   * and will be removed in v16.
-   */
-  allowLegacySDLImplementsInterfaces?: boolean,
-
-  /**
-   * EXPERIMENTAL:
+   * @deprecated will be removed in the v17.0.0
    *
    * If enabled, the parser will understand and parse variable definitions
    * contained in a fragment definition. They'll be represented in the
@@ -99,10 +79,8 @@ export type ParseOptions = {|
    *     ...
    *   }
    *
-   * Note: this feature is experimental and may change or be removed in the
-   * future.
    */
-  experimentalFragmentVariables?: boolean,
+  allowLegacyFragmentVariables?: boolean,
 |};
 
 /**
@@ -478,10 +456,10 @@ export class Parser {
   parseFragmentDefinition(): FragmentDefinitionNode {
     const start = this._lexer.token;
     this.expectKeyword('fragment');
-    // Experimental support for defining variables within fragments changes
+    // Legacy support for defining variables within fragments changes
     // the grammar of FragmentDefinition:
     //   - fragment FragmentName VariableDefinitions? on TypeCondition Directives? SelectionSet
-    if (this._options?.experimentalFragmentVariables === true) {
+    if (this._options?.allowLegacyFragmentVariables === true) {
       return {
         kind: Kind.FRAGMENT_DEFINITION,
         name: this.parseFragmentName(),
@@ -677,11 +655,11 @@ export class Parser {
     const start = this._lexer.token;
     let type;
     if (this.expectOptionalToken(TokenKind.BRACKET_L)) {
-      type = this.parseTypeReference();
+      const innerType = this.parseTypeReference();
       this.expectToken(TokenKind.BRACKET_R);
       type = {
         kind: Kind.LIST_TYPE,
-        type,
+        type: innerType,
         loc: this.loc(start),
       };
     } else {
@@ -855,40 +833,15 @@ export class Parser {
    *   - ImplementsInterfaces & NamedType
    */
   parseImplementsInterfaces(): Array<NamedTypeNode> {
-    if (!this.expectOptionalKeyword('implements')) {
-      return [];
-    }
-
-    if (this._options?.allowLegacySDLImplementsInterfaces === true) {
-      const types = [];
-      // Optional leading ampersand
-      this.expectOptionalToken(TokenKind.AMP);
-      do {
-        types.push(this.parseNamedType());
-      } while (
-        this.expectOptionalToken(TokenKind.AMP) ||
-        this.peek(TokenKind.NAME)
-      );
-      return types;
-    }
-
-    return this.delimitedMany(TokenKind.AMP, this.parseNamedType);
+    return this.expectOptionalKeyword('implements')
+      ? this.delimitedMany(TokenKind.AMP, this.parseNamedType)
+      : [];
   }
 
   /**
    * FieldsDefinition : { FieldDefinition+ }
    */
   parseFieldsDefinition(): Array<FieldDefinitionNode> {
-    // Legacy support for the SDL?
-    if (
-      this._options?.allowLegacySDLEmptyFields === true &&
-      this.peek(TokenKind.BRACE_L) &&
-      this._lexer.lookahead().kind === TokenKind.BRACE_R
-    ) {
-      this._lexer.advance();
-      this._lexer.advance();
-      return [];
-    }
     return this.optionalMany(
       TokenKind.BRACE_L,
       this.parseFieldDefinition,

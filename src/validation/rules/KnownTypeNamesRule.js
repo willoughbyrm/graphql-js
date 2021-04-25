@@ -1,5 +1,5 @@
-import didYouMean from '../../jsutils/didYouMean';
-import suggestionList from '../../jsutils/suggestionList';
+import { didYouMean } from '../../jsutils/didYouMean';
+import { suggestionList } from '../../jsutils/suggestionList';
 
 import { GraphQLError } from '../../error/GraphQLError';
 
@@ -38,9 +38,10 @@ export function KnownTypeNamesRule(
     }
   }
 
-  const typeNames = Object.keys(existingTypesMap).concat(
-    Object.keys(definedTypes),
-  );
+  const typeNames = [
+    ...Object.keys(existingTypesMap),
+    ...Object.keys(definedTypes),
+  ];
 
   return {
     NamedType(node, _1, parent, _2, ancestors) {
@@ -48,7 +49,7 @@ export function KnownTypeNamesRule(
       if (!existingTypesMap[typeName] && !definedTypes[typeName]) {
         const definitionNode = ancestors[2] ?? parent;
         const isSDL = definitionNode != null && isSDLNode(definitionNode);
-        if (isSDL && isStandardTypeName(typeName)) {
+        if (isSDL && standardTypeNames.includes(typeName)) {
           return;
         }
 
@@ -70,10 +71,6 @@ export function KnownTypeNamesRule(
 const standardTypeNames = [...specifiedScalarTypes, ...introspectionTypes].map(
   (type) => type.name,
 );
-
-function isStandardTypeName(typeName: string): boolean {
-  return standardTypeNames.indexOf(typeName) !== -1;
-}
 
 function isSDLNode(value: ASTNode | $ReadOnlyArray<ASTNode>): boolean {
   return (

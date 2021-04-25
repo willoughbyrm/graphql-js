@@ -1,15 +1,12 @@
-import arrayFrom from '../polyfills/arrayFrom';
-import objectValues from '../polyfills/objectValues';
-
 import type { Path } from '../jsutils/Path';
-import inspect from '../jsutils/inspect';
-import invariant from '../jsutils/invariant';
-import didYouMean from '../jsutils/didYouMean';
-import isObjectLike from '../jsutils/isObjectLike';
-import isCollection from '../jsutils/isCollection';
-import suggestionList from '../jsutils/suggestionList';
-import printPathArray from '../jsutils/printPathArray';
+import { inspect } from '../jsutils/inspect';
+import { invariant } from '../jsutils/invariant';
+import { didYouMean } from '../jsutils/didYouMean';
+import { isObjectLike } from '../jsutils/isObjectLike';
+import { suggestionList } from '../jsutils/suggestionList';
+import { printPathArray } from '../jsutils/printPathArray';
 import { addPath, pathToArray } from '../jsutils/Path';
+import { isIterableObject } from '../jsutils/isIterableObject';
 
 import { GraphQLError } from '../error/GraphQLError';
 
@@ -33,7 +30,7 @@ type OnErrorCB = (
 export function coerceInputValue(
   inputValue: mixed,
   type: GraphQLInputType,
-  onError?: OnErrorCB = defaultOnError,
+  onError: OnErrorCB = defaultOnError,
 ): mixed {
   return coerceInputValueImpl(inputValue, type, onError);
 }
@@ -78,8 +75,8 @@ function coerceInputValueImpl(
 
   if (isListType(type)) {
     const itemType = type.ofType;
-    if (isCollection(inputValue)) {
-      return arrayFrom(inputValue, (itemValue, index) => {
+    if (isIterableObject(inputValue)) {
+      return Array.from(inputValue, (itemValue, index) => {
         const itemPath = addPath(path, index, undefined);
         return coerceInputValueImpl(itemValue, itemType, onError, itemPath);
       });
@@ -101,7 +98,7 @@ function coerceInputValueImpl(
     const coercedValue = {};
     const fieldDefs = type.getFields();
 
-    for (const field of objectValues(fieldDefs)) {
+    for (const field of Object.values(fieldDefs)) {
       const fieldValue = inputValue[field.name];
 
       if (fieldValue === undefined) {

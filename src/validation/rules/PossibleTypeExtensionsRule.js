@@ -1,7 +1,7 @@
-import inspect from '../../jsutils/inspect';
-import invariant from '../../jsutils/invariant';
-import didYouMean from '../../jsutils/didYouMean';
-import suggestionList from '../../jsutils/suggestionList';
+import { inspect } from '../../jsutils/inspect';
+import { invariant } from '../../jsutils/invariant';
+import { didYouMean } from '../../jsutils/didYouMean';
+import { suggestionList } from '../../jsutils/suggestionList';
 
 import { GraphQLError } from '../../error/GraphQLError';
 
@@ -72,10 +72,10 @@ export function PossibleTypeExtensionsRule(
         );
       }
     } else {
-      let allTypeNames = Object.keys(definedTypes);
-      if (schema) {
-        allTypeNames = allTypeNames.concat(Object.keys(schema.getTypeMap()));
-      }
+      const allTypeNames = Object.keys({
+        ...definedTypes,
+        ...schema?.getTypeMap(),
+      });
 
       const suggestedTypes = suggestionList(typeName, allTypeNames);
       context.reportError(

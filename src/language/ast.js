@@ -1,5 +1,3 @@
-import defineInspect from '../jsutils/defineInspect';
-
 import type { Source } from './source';
 import type { TokenKindEnum } from './tokenKind';
 
@@ -45,9 +43,6 @@ export class Location {
     return { start: this.start, end: this.end };
   }
 }
-
-// Print a simplified form when appearing in `inspect` and `util.inspect`.
-defineInspect(Location);
 
 /**
  * Represents a range of characters represented by a lexical token
@@ -125,9 +120,6 @@ export class Token {
     };
   }
 }
-
-// Print a simplified form when appearing in `inspect` and `util.inspect`.
-defineInspect(Token);
 
 /**
  * @internal
@@ -331,8 +323,7 @@ export type FragmentDefinitionNode = {|
   +kind: 'FragmentDefinition',
   +loc?: Location,
   +name: NameNode,
-  // Note: fragment variable definitions are experimental and may be changed
-  // or removed in the future.
+  // Note: fragment variable definitions are deprecated and will removed in v17.0.0
   +variableDefinitions?: $ReadOnlyArray<VariableDefinitionNode>,
   +typeCondition: NamedTypeNode,
   +directives?: $ReadOnlyArray<DirectiveNode>,

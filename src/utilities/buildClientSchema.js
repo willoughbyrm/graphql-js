@@ -1,9 +1,7 @@
-import objectValues from '../polyfills/objectValues';
-
-import inspect from '../jsutils/inspect';
-import devAssert from '../jsutils/devAssert';
-import keyValMap from '../jsutils/keyValMap';
-import isObjectLike from '../jsutils/isObjectLike';
+import { inspect } from '../jsutils/inspect';
+import { devAssert } from '../jsutils/devAssert';
+import { keyValMap } from '../jsutils/keyValMap';
+import { isObjectLike } from '../jsutils/isObjectLike';
 
 import { parseValue } from '../language/parser';
 
@@ -116,7 +114,7 @@ export function buildClientSchema(
     query: queryType,
     mutation: mutationType,
     subscription: subscriptionType,
-    types: objectValues(typeMap),
+    types: Object.values(typeMap),
     directives,
     assumeValid: options?.assumeValid,
   });
@@ -203,7 +201,7 @@ export function buildClientSchema(
     return new GraphQLScalarType({
       name: scalarIntrospection.name,
       description: scalarIntrospection.description,
-      specifiedByUrl: scalarIntrospection.specifiedByUrl,
+      specifiedByURL: scalarIntrospection.specifiedByURL,
     });
   }
 

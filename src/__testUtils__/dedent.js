@@ -1,6 +1,22 @@
+export function dedentString(string: string): string {
+  const trimmedStr = string
+    .replace(/^\n*/m, '') //  remove leading newline
+    .replace(/[ \t\n]*$/, ''); // remove trailing spaces and tabs
+
+  // fixes indentation by removing leading spaces and tabs from each line
+  let indent = '';
+  for (const char of trimmedStr) {
+    if (char !== ' ' && char !== '\t') {
+      break;
+    }
+    indent += char;
+  }
+
+  return trimmedStr.replace(RegExp('^' + indent, 'mg'), ''); // remove indent
+}
+
 /**
- * An ES6 string tag that fixes indentation. Also removes leading newlines
- * and trailing spaces and tabs, but keeps trailing newlines.
+ * An ES6 string tag that fixes indentation and also trims string.
  *
  * Example usage:
  * const str = dedent`
@@ -8,9 +24,9 @@
  *     test
  *   }
  * `;
- * str === "{\n  test\n}\n";
+ * str === "{\n  test\n}";
  */
-export default function dedent(
+export function dedent(
   strings: $ReadOnlyArray<string>,
   ...values: $ReadOnlyArray<string>
 ): string {
@@ -26,17 +42,5 @@ export default function dedent(
     }
   }
 
-  const trimmedStr = str
-    .replace(/^\n*/m, '') //  remove leading newline
-    .replace(/[ \t]*$/, ''); // remove trailing spaces and tabs
-
-  // fixes indentation by removing leading spaces and tabs from each line
-  let indent = '';
-  for (const char of trimmedStr) {
-    if (char !== ' ' && char !== '\t') {
-      break;
-    }
-    indent += char;
-  }
-  return trimmedStr.replace(RegExp('^' + indent, 'mg'), ''); // remove indent
+  return dedentString(str);
 }

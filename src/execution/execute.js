@@ -1,18 +1,16 @@
-import arrayFrom from '../polyfills/arrayFrom';
-
 import type { Path } from '../jsutils/Path';
 import type { ObjMap } from '../jsutils/ObjMap';
 import type { PromiseOrValue } from '../jsutils/PromiseOrValue';
-import inspect from '../jsutils/inspect';
-import memoize3 from '../jsutils/memoize3';
-import invariant from '../jsutils/invariant';
-import devAssert from '../jsutils/devAssert';
-import isPromise from '../jsutils/isPromise';
-import isObjectLike from '../jsutils/isObjectLike';
-import isCollection from '../jsutils/isCollection';
-import promiseReduce from '../jsutils/promiseReduce';
-import promiseForObject from '../jsutils/promiseForObject';
+import { inspect } from '../jsutils/inspect';
+import { memoize3 } from '../jsutils/memoize3';
+import { invariant } from '../jsutils/invariant';
+import { devAssert } from '../jsutils/devAssert';
+import { isPromise } from '../jsutils/isPromise';
+import { isObjectLike } from '../jsutils/isObjectLike';
+import { promiseReduce } from '../jsutils/promiseReduce';
+import { promiseForObject } from '../jsutils/promiseForObject';
 import { addPath, pathToArray } from '../jsutils/Path';
+import { isIterableObject } from '../jsutils/isIterableObject';
 
 import type { GraphQLFormattedError } from '../error/formatError';
 import { GraphQLError } from '../error/GraphQLError';
@@ -52,7 +50,6 @@ import {
   GraphQLSkipDirective,
 } from '../type/directives';
 import {
-  isNamedType,
   isObjectType,
   isAbstractType,
   isLeafType,
@@ -146,67 +143,8 @@ export type ExecutionArgs = {|
  *
  * If the arguments to this function do not result in a legal execution context,
  * a GraphQLError will be thrown immediately explaining the invalid input.
- *
- * Accepts either an object with named arguments, or individual arguments.
  */
-declare function execute(
-  ExecutionArgs,
-  ..._: []
-): PromiseOrValue<ExecutionResult>;
-/* eslint-disable no-redeclare */
-declare function execute(
-  schema: GraphQLSchema,
-  document: DocumentNode,
-  rootValue?: mixed,
-  contextValue?: mixed,
-  variableValues?: ?{ +[variable: string]: mixed, ... },
-  operationName?: ?string,
-  fieldResolver?: ?GraphQLFieldResolver<any, any>,
-  typeResolver?: ?GraphQLTypeResolver<any, any>,
-): PromiseOrValue<ExecutionResult>;
-export function execute(
-  argsOrSchema,
-  document,
-  rootValue,
-  contextValue,
-  variableValues,
-  operationName,
-  fieldResolver,
-  typeResolver,
-) {
-  /* eslint-enable no-redeclare */
-  // Extract arguments from object args if provided.
-  return arguments.length === 1
-    ? executeImpl(argsOrSchema)
-    : executeImpl({
-        schema: argsOrSchema,
-        document,
-        rootValue,
-        contextValue,
-        variableValues,
-        operationName,
-        fieldResolver,
-        typeResolver,
-      });
-}
-
-/**
- * Also implements the "Evaluating requests" section of the GraphQL specification.
- * However, it guarantees to complete synchronously (or throw an error) assuming
- * that all field resolvers are also synchronous.
- */
-export function executeSync(args: ExecutionArgs): ExecutionResult {
-  const result = executeImpl(args);
-
-  // Assert that the execution was synchronous.
-  if (isPromise(result)) {
-    throw new Error('GraphQL execution failed to complete synchronously.');
-  }
-
-  return result;
-}
-
-function executeImpl(args: ExecutionArgs): PromiseOrValue<ExecutionResult> {
+export function execute(args: ExecutionArgs): PromiseOrValue<ExecutionResult> {
   const {
     schema,
     document,
@@ -248,6 +186,22 @@ function executeImpl(args: ExecutionArgs): PromiseOrValue<ExecutionResult> {
   // resolved Promise.
   const data = executeOperation(exeContext, exeContext.operation, rootValue);
   return buildResponse(exeContext, data);
+}
+
+/**
+ * Also implements the "Evaluating requests" section of the GraphQL specification.
+ * However, it guarantees to complete synchronously (or throw an error) assuming
+ * that all field resolvers are also synchronous.
+ */
+export function executeSync(args: ExecutionArgs): ExecutionResult {
+  const result = execute(args);
+
+  // Assert that the execution was synchronous.
+  if (isPromise(result)) {
+    throw new Error('GraphQL execution failed to complete synchronously.');
+  }
+
+  return result;
 }
 
 /**
@@ -352,6 +306,7 @@ export function buildExecutionContext(
     return coercedVariableValues.errors;
   }
 
+  // $FlowFixMe[incompatible-return]
   return {
     schema,
     fragments,
@@ -867,7 +822,7 @@ function completeListValue(
   path: Path,
   result: mixed,
 ): PromiseOrValue<$ReadOnlyArray<mixed>> {
-  if (!isCollection(result)) {
+  if (!isIterableObject(result)) {
     throw new GraphQLError(
       `Expected Iterable, but did not find one for field "${info.parentType.name}.${info.fieldName}".`,
     );
@@ -877,7 +832,7 @@ function completeListValue(
   // where the list contains no Promises by avoiding creating another Promise.
   const itemType = returnType.ofType;
   let containsPromise = false;
-  const completedResults = arrayFrom(result, (item, index) => {
+  const completedResults = Array.from(result, (item, index) => {
     // No need to modify the info object containing the path,
     // since from here on it is not ever accessed by resolver functions.
     const itemPath = addPath(path, index, undefined);
@@ -997,29 +952,32 @@ function completeAbstractValue(
 }
 
 function ensureValidRuntimeType(
-  runtimeTypeOrName: mixed,
+  runtimeTypeName: mixed,
   exeContext: ExecutionContext,
   returnType: GraphQLAbstractType,
   fieldNodes: $ReadOnlyArray<FieldNode>,
   info: GraphQLResolveInfo,
   result: mixed,
 ): GraphQLObjectType {
-  if (runtimeTypeOrName == null) {
+  if (runtimeTypeName == null) {
     throw new GraphQLError(
       `Abstract type "${returnType.name}" must resolve to an Object type at runtime for field "${info.parentType.name}.${info.fieldName}". Either the "${returnType.name}" type should provide a "resolveType" function or each possible type should provide an "isTypeOf" function.`,
       fieldNodes,
     );
   }
 
-  // FIXME: temporary workaround until support for passing object types would be removed in v16.0.0
-  const runtimeTypeName = isNamedType(runtimeTypeOrName)
-    ? runtimeTypeOrName.name
-    : runtimeTypeOrName;
+  // releases before 16.0.0 supported returning `GraphQLObjectType` from `resolveType`
+  // TODO: remove in 17.0.0 release
+  if (isObjectType(runtimeTypeName)) {
+    throw new GraphQLError(
+      'Support for returning GraphQLObjectType from resolveType was removed in graphql-js@16.0.0 please return type name instead.',
+    );
+  }
 
   if (typeof runtimeTypeName !== 'string') {
     throw new GraphQLError(
       `Abstract type "${returnType.name}" must resolve to an Object type at runtime for field "${info.parentType.name}.${info.fieldName}" with ` +
-        `value ${inspect(result)}, received "${inspect(runtimeTypeOrName)}".`,
+        `value ${inspect(result)}, received "${inspect(runtimeTypeName)}".`,
     );
   }
 

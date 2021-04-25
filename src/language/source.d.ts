@@ -15,6 +15,7 @@ export class Source {
   name: string;
   locationOffset: Location;
   constructor(body: string, name?: string, locationOffset?: Location);
+  get [Symbol.toStringTag](): string;
 }
 
 /**
@@ -22,4 +23,4 @@ export class Source {
  *
  * @internal
  */
-export function isSource(source: any): source is Source;
+export function isSource(source: unknown): source is Source;

@@ -1,8 +1,10 @@
+import { naturalCompare } from './naturalCompare';
+
 /**
  * Given an invalid input string and a list of valid options, returns a filtered
  * list of valid options sorted based on their similarity with the input.
  */
-export default function suggestionList(
+export function suggestionList(
   input: string,
   options: $ReadOnlyArray<string>,
 ): Array<string> {
@@ -19,7 +21,7 @@ export default function suggestionList(
 
   return Object.keys(optionsByDistance).sort((a, b) => {
     const distanceDiff = optionsByDistance[a] - optionsByDistance[b];
-    return distanceDiff !== 0 ? distanceDiff : a.localeCompare(b);
+    return distanceDiff !== 0 ? distanceDiff : naturalCompare(a, b);
   });
 }
 

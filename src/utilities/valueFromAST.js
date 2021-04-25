@@ -1,9 +1,7 @@
-import objectValues from '../polyfills/objectValues';
-
 import type { ObjMap } from '../jsutils/ObjMap';
-import keyMap from '../jsutils/keyMap';
-import inspect from '../jsutils/inspect';
-import invariant from '../jsutils/invariant';
+import { keyMap } from '../jsutils/keyMap';
+import { inspect } from '../jsutils/inspect';
+import { invariant } from '../jsutils/invariant';
 
 import type { ValueNode } from '../language/ast';
 import { Kind } from '../language/kinds';
@@ -110,7 +108,7 @@ export function valueFromAST(
     }
     const coercedObj = Object.create(null);
     const fieldNodes = keyMap(valueNode.fields, (field) => field.name.value);
-    for (const field of objectValues(type.getFields())) {
+    for (const field of Object.values(type.getFields())) {
       const fieldNode = fieldNodes[field.name];
       if (!fieldNode || isMissingVariable(fieldNode.value, variables)) {
         if (field.defaultValue !== undefined) {

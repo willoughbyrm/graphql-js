@@ -1,15 +1,13 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import resolveOnNextTick from '../../__testUtils__/resolveOnNextTick';
+import { resolveOnNextTick } from '../../__testUtils__/resolveOnNextTick';
 
-import invariant from '../../jsutils/invariant';
-import isAsyncIterable from '../../jsutils/isAsyncIterable';
+import { invariant } from '../../jsutils/invariant';
+import { isAsyncIterable } from '../../jsutils/isAsyncIterable';
 
 import type { DocumentNode } from '../../language/ast';
 import { parse } from '../../language/parser';
-
-import { GraphQLError } from '../../error/GraphQLError';
 
 import { GraphQLSchema } from '../../type/schema';
 import { GraphQLList, GraphQLObjectType } from '../../type/definition';
@@ -17,7 +15,7 @@ import { GraphQLInt, GraphQLString, GraphQLBoolean } from '../../type/scalars';
 
 import { createSourceEventStream, subscribe } from '../subscribe';
 
-import SimplePubSub from './simplePubSub';
+import { SimplePubSub } from './simplePubSub';
 
 type Email = {|
   from: string,
@@ -152,26 +150,6 @@ async function expectPromiseToThrow(
 
 // Check all error cases when initializing the subscription.
 describe('Subscription Initialization Phase', () => {
-  it('accepts positional arguments', async () => {
-    const document = parse(`
-      subscription {
-        importantEmail
-      }
-    `);
-
-    async function* emptyAsyncIterator() {
-      // Empty
-    }
-
-    // $FlowFixMe[incompatible-call]
-    const ai = await subscribe(emailSchema, document, {
-      importantEmail: emptyAsyncIterator,
-    });
-
-    ai.next();
-    ai.return();
-  });
-
   it('accepts multiple subscription fields defined in schema', async () => {
     const pubsub = new SimplePubSub();
     const SubscriptionTypeMultiple = new GraphQLObjectType({
@@ -328,7 +306,7 @@ describe('Subscription Initialization Phase', () => {
     );
 
     await expectPromiseToThrow(
-      // $FlowExpectedError[incompatible-call]
+      // $FlowExpectedError[prop-missing]
       () => subscribe({ document }),
       'Expected undefined to be a GraphQL schema.',
     );
@@ -342,7 +320,7 @@ describe('Subscription Initialization Phase', () => {
     );
 
     await expectPromiseToThrow(
-      // $FlowExpectedError[incompatible-call]
+      // $FlowExpectedError[prop-missing]
       () => subscribe({ schema: emailSchema }),
       'Must provide document.',
     );
@@ -371,7 +349,7 @@ describe('Subscription Initialization Phase', () => {
   it('should pass through unexpected errors thrown in subscribe', async () => {
     let expectedError;
     try {
-      // $FlowExpectedError[incompatible-call]
+      // $FlowExpectedError[prop-missing]
       await subscribe({ schema: emailSchema, document: {} });
     } catch (error) {
       expectedError = error;
@@ -917,12 +895,14 @@ describe('Subscription Publish Phase', () => {
   });
 
   it('should handle error during execution of source event', async () => {
+    async function* generateEmails() {
+      yield { email: { subject: 'Hello' } };
+      yield { email: { subject: 'Goodbye' } };
+      yield { email: { subject: 'Bonjour' } };
+    }
+
     const erroringEmailSchema = emailSchemaWithResolvers(
-      async function* () {
-        yield { email: { subject: 'Hello' } };
-        yield { email: { subject: 'Goodbye' } };
-        yield { email: { subject: 'Bonjour' } };
-      },
+      generateEmails,
       (event) => {
         if (event.email.subject === 'Goodbye') {
           throw new Error('Never leave.');
@@ -995,11 +975,13 @@ describe('Subscription Publish Phase', () => {
   });
 
   it('should pass through error thrown in source event stream', async () => {
+    async function* generateEmails() {
+      yield { email: { subject: 'Hello' } };
+      throw new Error('test error');
+    }
+
     const erroringEmailSchema = emailSchemaWithResolvers(
-      async function* () {
-        yield { email: { subject: 'Hello' } };
-        throw new Error('test error');
-      },
+      generateEmails,
       (email) => email,
     );
 
@@ -1043,62 +1025,6 @@ describe('Subscription Publish Phase', () => {
 
     const payload2 = await subscription.next();
     expect(payload2).to.deep.equal({
-      done: true,
-      value: undefined,
-    });
-  });
-
-  it('should resolve GraphQL error from source event stream', async () => {
-    const erroringEmailSchema = emailSchemaWithResolvers(
-      async function* () {
-        yield { email: { subject: 'Hello' } };
-        throw new GraphQLError('test error');
-      },
-      (email) => email,
-    );
-
-    const subscription = await subscribe({
-      schema: erroringEmailSchema,
-      document: parse(`
-        subscription {
-          importantEmail {
-            email {
-              subject
-            }
-          }
-        }
-      `),
-    });
-    invariant(isAsyncIterable(subscription));
-
-    const payload1 = await subscription.next();
-    expect(payload1).to.deep.equal({
-      done: false,
-      value: {
-        data: {
-          importantEmail: {
-            email: {
-              subject: 'Hello',
-            },
-          },
-        },
-      },
-    });
-
-    const payload2 = await subscription.next();
-    expect(payload2).to.deep.equal({
-      done: false,
-      value: {
-        errors: [
-          {
-            message: 'test error',
-          },
-        ],
-      },
-    });
-
-    const payload3 = await subscription.next();
-    expect(payload3).to.deep.equal({
       done: true,
       value: undefined,
     });

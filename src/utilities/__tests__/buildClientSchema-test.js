@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import dedent from '../../__testUtils__/dedent';
+import { dedent } from '../../__testUtils__/dedent';
 
 import { graphqlSync } from '../../graphql';
 
@@ -381,7 +381,6 @@ describe('Type System: build schema from introspection', () => {
         name: 'VEGETABLES',
         description: 'Foods that are vegetables.',
         value: 'VEGETABLES',
-        isDeprecated: false,
         deprecationReason: null,
         extensions: undefined,
         astNode: undefined,
@@ -390,7 +389,6 @@ describe('Type System: build schema from introspection', () => {
         name: 'FRUITS',
         description: null,
         value: 'FRUITS',
-        isDeprecated: false,
         deprecationReason: null,
         extensions: undefined,
         astNode: undefined,
@@ -399,7 +397,6 @@ describe('Type System: build schema from introspection', () => {
         name: 'OILS',
         description: null,
         value: 'OILS',
-        isDeprecated: true,
         deprecationReason: 'Too fatty',
         extensions: undefined,
         astNode: undefined,
@@ -595,7 +592,7 @@ describe('Type System: build schema from introspection', () => {
     expect(result.data).to.deep.equal({ foo: 'bar' });
   });
 
-  describe('can build invalid schema', () => {
+  it('can build invalid schema', () => {
     const schema = buildSchema('type Query', { assumeValid: true });
 
     const introspection = introspectionFromSchema(schema);
