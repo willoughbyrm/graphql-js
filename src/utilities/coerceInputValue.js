@@ -29,6 +29,8 @@ import { Kind } from '../language/kinds';
 
 import type { VariableValues } from '../execution/values';
 
+import { replaceVariables } from './replaceVariables';
+
 type OnErrorCB = (
   path: $ReadOnlyArray<string | number>,
   invalidValue: mixed,
@@ -311,8 +313,9 @@ export function coerceInputLiteral(
 
   // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
   if (isLeafType(type)) {
+    const constValueNode = replaceVariables(valueNode, variableValues);
     try {
-      return type.parseLiteral(valueNode, variableValues);
+      return type.parseLiteral(constValueNode);
     } catch (_error) {
       return; // Invalid: ignore error and intentionally return no value.
     }
