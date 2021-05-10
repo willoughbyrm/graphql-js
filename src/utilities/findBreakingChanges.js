@@ -17,6 +17,7 @@ import type {
   GraphQLObjectType,
   GraphQLInterfaceType,
   GraphQLInputObjectType,
+  GraphQLDefaultValueUsage,
 } from '../type/definition';
 import { isSpecifiedScalarType } from '../type/scalars';
 import {
@@ -402,18 +403,19 @@ function findArgChanges(
           `${oldType.name}.${oldField.name} arg ${oldArg.name} has changed type from ` +
           `${String(oldArg.type)} to ${String(newArg.type)}.`,
       });
-    } else if (oldArg.defaultValue !== undefined) {
-      if (newArg.defaultValue === undefined) {
+    } else if (oldArg.defaultValue) {
+      if (!newArg.defaultValue) {
         schemaChanges.push({
           type: DangerousChangeType.ARG_DEFAULT_VALUE_CHANGE,
           description: `${oldType.name}.${oldField.name} arg ${oldArg.name} defaultValue was removed.`,
         });
       } else {
+        const newArgDefaultValue = newArg.defaultValue;
         // Since we looking only for client's observable changes we should
         // compare default values in the same representation as they are
         // represented inside introspection.
-        const oldValueStr = stringifyValue(oldArg.defaultValue, oldArg.type);
-        const newValueStr = stringifyValue(newArg.defaultValue, newArg.type);
+        const oldValueStr = printDefaultValue(oldArg.defaultValue, oldArg.type);
+        const newValueStr = printDefaultValue(newArgDefaultValue, newArg.type);
 
         if (oldValueStr !== newValueStr) {
           schemaChanges.push({
@@ -533,10 +535,14 @@ function typeKindName(type: GraphQLNamedType): string {
   invariant(false, 'Unexpected type: ' + inspect((type: empty)));
 }
 
-function stringifyValue(value: mixed, type: GraphQLInputType): string {
-  const ast = astFromValue(value, type);
-  invariant(ast != null);
-
+function printDefaultValue(
+  defaultValue: GraphQLDefaultValueUsage,
+  type: GraphQLInputType,
+): string {
+  const ast = defaultValue.literal
+    ? defaultValue.literal
+    : astFromValue(defaultValue.value, type);
+  invariant(ast);
   const sortedAST = visit(ast, {
     ObjectValue(objectNode) {
       // Make a copy since sort mutates array

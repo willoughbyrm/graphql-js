@@ -15,6 +15,7 @@ import type {
   GraphQLArgument,
   GraphQLInputField,
   GraphQLEnumValue,
+  GraphQLDefaultValueUsage,
 } from '../type/definition';
 import {
   isObjectType,
@@ -47,7 +48,7 @@ export class TypeInfo {
   _parentTypeStack: Array<?GraphQLCompositeType>;
   _inputTypeStack: Array<?GraphQLInputType>;
   _fieldDefStack: Array<?GraphQLField<mixed, mixed>>;
-  _defaultValueStack: Array<?mixed>;
+  _defaultValueStack: Array<?GraphQLDefaultValueUsage>;
   _directive: ?GraphQLDirective;
   _argument: ?GraphQLArgument;
   _enumValue: ?GraphQLEnumValue;
@@ -115,7 +116,7 @@ export class TypeInfo {
     }
   }
 
-  getDefaultValue(): ?mixed {
+  getDefaultValue(): ?GraphQLDefaultValueUsage {
     if (this._defaultValueStack.length > 0) {
       return this._defaultValueStack[this._defaultValueStack.length - 1];
     }
@@ -209,7 +210,7 @@ export class TypeInfo {
           }
         }
         this._argument = argDef;
-        this._defaultValueStack.push(argDef ? argDef.defaultValue : undefined);
+        this._defaultValueStack.push(argDef?.defaultValue);
         this._inputTypeStack.push(isInputType(argType) ? argType : undefined);
         break;
       }
@@ -233,9 +234,7 @@ export class TypeInfo {
             inputFieldType = inputField.type;
           }
         }
-        this._defaultValueStack.push(
-          inputField ? inputField.defaultValue : undefined,
-        );
+        this._defaultValueStack.push(inputField?.defaultValue);
         this._inputTypeStack.push(
           isInputType(inputFieldType) ? inputFieldType : undefined,
         );

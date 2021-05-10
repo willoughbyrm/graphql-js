@@ -48,8 +48,6 @@ import type {
   IntrospectionNamedTypeRef,
 } from './getIntrospectionQuery';
 
-import { coerceInputLiteral } from './coerceInputValue';
-
 /**
  * Build a GraphQLSchema for use by client tools.
  *
@@ -368,17 +366,13 @@ export function buildClientSchema(
       );
     }
 
-    const defaultValue =
-      inputValueIntrospection.defaultValue != null
-        ? coerceInputLiteral(
-            parseConstValue(inputValueIntrospection.defaultValue),
-            type,
-          )
-        : undefined;
     return {
       description: inputValueIntrospection.description,
       type,
-      defaultValue,
+      defaultValueLiteral:
+        inputValueIntrospection.defaultValue != null
+          ? parseConstValue(inputValueIntrospection.defaultValue)
+          : undefined,
       deprecationReason: inputValueIntrospection.deprecationReason,
     };
   }

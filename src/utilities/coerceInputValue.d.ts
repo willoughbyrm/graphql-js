@@ -3,7 +3,7 @@ import { ObjMap } from '../jsutils/ObjMap';
 
 import { ValueNode } from '../language/ast';
 
-import { GraphQLInputType } from '../type/definition';
+import { GraphQLInputType, GraphQLDefaultValueUsage } from '../type/definition';
 
 import { GraphQLError } from '../error/GraphQLError';
 
@@ -32,4 +32,12 @@ export function coerceInputLiteral(
   valueNode: ValueNode,
   type: GraphQLInputType,
   variables?: Maybe<ObjMap<unknown>>,
+): unknown;
+
+/**
+ * @internal
+ */
+export function coerceDefaultValue(
+  defaultValue: GraphQLDefaultValueUsage,
+  type: GraphQLInputType,
 ): unknown;

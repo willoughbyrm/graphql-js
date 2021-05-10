@@ -19,6 +19,7 @@ import {
   GraphQLField,
   GraphQLArgument,
   GraphQLEnumValue,
+  GraphQLDefaultValueUsage,
 } from '../type/definition';
 import { TypeInfo } from '../utilities/TypeInfo';
 
@@ -26,7 +27,7 @@ type NodeWithSelectionSet = OperationDefinitionNode | FragmentDefinitionNode;
 interface VariableUsage {
   readonly node: VariableNode;
   readonly type: Maybe<GraphQLInputType>;
-  readonly defaultValue: Maybe<unknown>;
+  readonly defaultValue: Maybe<GraphQLDefaultValueUsage>;
 }
 
 /**

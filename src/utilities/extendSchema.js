@@ -79,8 +79,6 @@ import {
   GraphQLInputObjectType,
 } from '../type/definition';
 
-import { coerceInputLiteral } from './coerceInputValue';
-
 type Options = {|
   ...GraphQLSchemaValidationOptions,
 
@@ -494,9 +492,7 @@ export function extendSchemaImpl(
       configMap[node.name.value] = {
         type,
         description: node.description?.value,
-        defaultValue: node.defaultValue
-          ? coerceInputLiteral(node.defaultValue, type)
-          : undefined,
+        defaultValueLiteral: node.defaultValue,
         deprecationReason: getDeprecationReason(node),
         astNode: node,
       };

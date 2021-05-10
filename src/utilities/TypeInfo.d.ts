@@ -12,6 +12,7 @@ import {
   GraphQLField,
   GraphQLArgument,
   GraphQLEnumValue,
+  GraphQLDefaultValueUsage,
 } from '../type/definition';
 
 /**
@@ -35,7 +36,7 @@ export class TypeInfo {
   getInputType(): Maybe<GraphQLInputType>;
   getParentInputType(): Maybe<GraphQLInputType>;
   getFieldDef(): Maybe<GraphQLField<unknown, unknown>>;
-  getDefaultValue(): Maybe<unknown>;
+  getDefaultValue(): Maybe<GraphQLDefaultValueUsage>;
   getDirective(): Maybe<GraphQLDirective>;
   getArgument(): Maybe<GraphQLArgument>;
   getEnumValue(): Maybe<GraphQLEnumValue>;
