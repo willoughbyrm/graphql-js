@@ -1,11 +1,12 @@
 import { Maybe } from '../jsutils/Maybe';
-import { ObjMap } from '../jsutils/ObjMap';
 
 import { ValueNode } from '../language/ast';
 
 import { GraphQLInputType, GraphQLDefaultValueUsage } from '../type/definition';
 
 import { GraphQLError } from '../error/GraphQLError';
+
+import { VariableValues } from '../execution/values';
 
 type OnErrorCB = (
   path: ReadonlyArray<string | number>,
@@ -31,7 +32,7 @@ export function coerceInputValue(
 export function coerceInputLiteral(
   valueNode: ValueNode,
   type: GraphQLInputType,
-  variables?: Maybe<ObjMap<unknown>>,
+  variableValues?: Maybe<VariableValues>,
 ): unknown;
 
 /**

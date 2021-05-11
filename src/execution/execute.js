@@ -60,6 +60,7 @@ import {
 import { typeFromAST } from '../utilities/typeFromAST';
 import { getOperationRootType } from '../utilities/getOperationRootType';
 
+import type { VariableValues } from './values';
 import {
   getVariableValues,
   getArgumentValues,
@@ -98,7 +99,7 @@ export type ExecutionContext = {|
   rootValue: mixed,
   contextValue: mixed,
   operation: OperationDefinitionNode,
-  variableValues: { [variable: string]: mixed, ... },
+  variableValues: VariableValues,
   fieldResolver: GraphQLFieldResolver<any, any>,
   typeResolver: GraphQLTypeResolver<any, any>,
   errors: Array<GraphQLError>,
@@ -295,15 +296,15 @@ export function buildExecutionContext(
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const variableDefinitions = operation.variableDefinitions ?? [];
 
-  const coercedVariableValues = getVariableValues(
+  const variableValuesOrErrors = getVariableValues(
     schema,
     variableDefinitions,
     rawVariableValues ?? {},
     { maxErrors: 50 },
   );
 
-  if (coercedVariableValues.errors) {
-    return coercedVariableValues.errors;
+  if (variableValuesOrErrors.errors) {
+    return variableValuesOrErrors.errors;
   }
 
   // $FlowFixMe[incompatible-return]
@@ -313,7 +314,7 @@ export function buildExecutionContext(
     rootValue,
     contextValue,
     operation,
-    variableValues: coercedVariableValues.coerced,
+    variableValues: variableValuesOrErrors.variableValues,
     fieldResolver: fieldResolver ?? defaultFieldResolver,
     typeResolver: typeResolver ?? defaultTypeResolver,
     errors: [],
@@ -679,7 +680,7 @@ export function buildResolveInfo(
     fragments: exeContext.fragments,
     rootValue: exeContext.rootValue,
     operation: exeContext.operation,
-    variableValues: exeContext.variableValues,
+    variableValues: exeContext.variableValues.coerced,
   };
 }
 
