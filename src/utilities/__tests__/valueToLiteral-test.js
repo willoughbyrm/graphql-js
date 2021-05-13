@@ -139,6 +139,17 @@ describe('valueToLiteral', () => {
     test('FOO', customScalar, undefined);
   });
 
+  it('custom scalar types may throw errors from valueToLiteral', () => {
+    const customScalar = new GraphQLScalarType({
+      name: 'CustomScalar',
+      valueToLiteral() {
+        throw new Error();
+      },
+    });
+
+    test('FOO', customScalar, undefined);
+  });
+
   it('custom scalar types may fall back on default valueToLiteral', () => {
     const customScalar = new GraphQLScalarType({
       name: 'CustomScalar',

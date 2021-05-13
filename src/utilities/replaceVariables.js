@@ -8,14 +8,15 @@ import { valueToLiteral } from './valueToLiteral';
 
 /**
  * Replaces any Variables found within an AST Value literal with literals
- * supplied from a map of variable values, returning a constant value.
+ * supplied from a map of variable values, or removed if no variable replacement
+ * exists, returning a constant value.
  *
  * Used primarily to ensure only complete constant values are used during input
  * coercion of custom scalars which accept complex literals.
  */
 export function replaceVariables(
   valueNode: ValueNode,
-  variables: ?VariableValues,
+  variables?: ?VariableValues,
 ): ConstValueNode {
   return visit(valueNode, {
     Variable(node) {

@@ -1,7 +1,10 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
+import { inspect } from '../../jsutils/inspect';
 import { identityFunc } from '../../jsutils/identityFunc';
+
+import { parseConstValue } from '../../language/parser';
 
 import type { GraphQLType, GraphQLNullableType } from '../definition';
 import {
@@ -69,6 +72,23 @@ describe('Type System: Scalars', () => {
 
     expect(scalar.serialize).to.equal(identityFunc);
     expect(scalar.parseValue).to.equal(identityFunc);
+    expect(scalar.parseLiteral).to.be.a('function');
+  });
+
+  it('use parseValue for parsing literals if parseLiteral omitted', () => {
+    const scalar = new GraphQLScalarType({
+      name: 'Foo',
+      parseValue(value) {
+        return 'parseValue: ' + inspect(value);
+      },
+    });
+
+    expect(scalar.parseLiteral(parseConstValue('null'))).to.equal(
+      'parseValue: null',
+    );
+    expect(scalar.parseLiteral(parseConstValue('{ foo: "bar" }'))).to.equal(
+      'parseValue: { foo: "bar" }',
+    );
   });
 
   it('rejects a Scalar type without name', () => {
@@ -114,6 +134,17 @@ describe('Type System: Scalars', () => {
     ).to.throw(
       'SomeScalar must provide both "parseValue" and "parseLiteral" functions.',
     );
+  });
+
+  it('rejects a Scalar type defining valueToLiteral with an incorrect type', () => {
+    expect(
+      () =>
+        new GraphQLScalarType({
+          name: 'SomeScalar',
+          // $FlowExpectedError[prop-missing]
+          valueToLiteral: {},
+        }),
+    ).to.throw('SomeScalar must provide "valueToLiteral" as a function.');
   });
 
   it('rejects a Scalar type defining specifiedByURL with an incorrect type', () => {

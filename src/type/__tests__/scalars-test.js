@@ -66,7 +66,6 @@ describe('Type System: Specified scalar types', () => {
 
     it('parseLiteral', () => {
       function parseLiteral(str: string) {
-        // $FlowExpectedError[not-a-function]
         return GraphQLInt.parseLiteral(parseConstValue(str));
       }
 
@@ -229,7 +228,6 @@ describe('Type System: Specified scalar types', () => {
 
     it('parseLiteral', () => {
       function parseLiteral(str: string) {
-        // $FlowExpectedError[not-a-function]
         return GraphQLFloat.parseLiteral(parseConstValue(str));
       }
 
@@ -340,7 +338,6 @@ describe('Type System: Specified scalar types', () => {
 
     it('parseLiteral', () => {
       function parseLiteral(str: string) {
-        // $FlowExpectedError[not-a-function]
         return GraphQLString.parseLiteral(parseConstValue(str));
       }
 
@@ -450,7 +447,6 @@ describe('Type System: Specified scalar types', () => {
 
     it('parseLiteral', () => {
       function parseLiteral(str: string) {
-        // $FlowExpectedError[not-a-function]
         return GraphQLBoolean.parseLiteral(parseConstValue(str));
       }
 
@@ -563,7 +559,6 @@ describe('Type System: Specified scalar types', () => {
 
     it('parseLiteral', () => {
       function parseLiteral(str: string) {
-        // $FlowExpectedError[not-a-function]
         return GraphQLID.parseLiteral(parseConstValue(str));
       }
 

@@ -1,6 +1,5 @@
 import { inspect } from '../jsutils/inspect';
 import { isObjectLike } from '../jsutils/isObjectLike';
-import { isSignedInt32 } from '../jsutils/isSignedInt32';
 
 import type { ConstValueNode } from '../language/ast';
 import { Kind } from '../language/kinds';
@@ -8,11 +7,18 @@ import { print } from '../language/printer';
 
 import { GraphQLError } from '../error/GraphQLError';
 
-import { defaultScalarLiteralToValue } from '../utilities/literalToValue';
 import { defaultScalarValueToLiteral } from '../utilities/valueToLiteral';
 
 import type { GraphQLNamedType } from './definition';
 import { GraphQLScalarType } from './definition';
+
+// As per the GraphQL Spec, Integers are only treated as valid when a valid
+// 32-bit signed integer, providing the broadest support across platforms.
+//
+// n.b. JavaScript's integers are safe between -(2^53 - 1) and 2^53 - 1 because
+// they are internally represented as IEEE 754 doubles.
+const MAX_INT = 2147483647;
+const MIN_INT = -2147483648;
 
 function serializeInt(outputValue: mixed): number {
   const coercedValue = serializeObject(outputValue);
@@ -31,7 +37,7 @@ function serializeInt(outputValue: mixed): number {
       `Int cannot represent non-integer value: ${inspect(coercedValue)}`,
     );
   }
-  if (!isSignedInt32(num)) {
+  if (num > MAX_INT || num < MIN_INT) {
     throw new GraphQLError(
       'Int cannot represent non 32-bit signed integer value: ' +
         inspect(coercedValue),
@@ -46,7 +52,7 @@ function coerceInt(inputValue: mixed): number {
       `Int cannot represent non-integer value: ${inspect(inputValue)}`,
     );
   }
-  if (!isSignedInt32(inputValue)) {
+  if (inputValue > MAX_INT || inputValue < MIN_INT) {
     throw new GraphQLError(
       `Int cannot represent non 32-bit signed integer value: ${inputValue}`,
     );
@@ -68,7 +74,7 @@ export const GraphQLInt: GraphQLScalarType = new GraphQLScalarType({
       );
     }
     const num = parseInt(valueNode.value, 10);
-    if (!isSignedInt32(num)) {
+    if (num > MAX_INT || num < MIN_INT) {
       throw new GraphQLError(
         `Int cannot represent non 32-bit signed integer value: ${valueNode.value}`,
         valueNode,
@@ -77,16 +83,13 @@ export const GraphQLInt: GraphQLScalarType = new GraphQLScalarType({
     return num;
   },
   valueToLiteral(value) {
-    if (isSignedInt32(value)) {
-      return defaultScalarValueToLiteral(value);
-    }
-  },
-  literalToValue(valueNode) {
-    if (valueNode.kind === Kind.INT) {
-      const value = defaultScalarLiteralToValue(valueNode);
-      if (isSignedInt32(value)) {
-        return value;
-      }
+    if (
+      typeof value === 'number' &&
+      Number.isInteger(value) &&
+      value <= MAX_INT &&
+      value >= MIN_INT
+    ) {
+      return { kind: Kind.INT, value: String(value) };
     }
   },
 });
@@ -139,11 +142,6 @@ export const GraphQLFloat: GraphQLScalarType = new GraphQLScalarType({
     const literal = defaultScalarValueToLiteral(value);
     if (literal.kind === Kind.FLOAT || literal.kind === Kind.INT) {
       return literal;
-    }
-  },
-  literalToValue(valueNode) {
-    if (valueNode.kind === Kind.FLOAT || valueNode.kind === Kind.INT) {
-      return defaultScalarLiteralToValue(valueNode);
     }
   },
 });
@@ -216,11 +214,6 @@ export const GraphQLString: GraphQLScalarType = new GraphQLScalarType({
       return literal;
     }
   },
-  literalToValue(valueNode) {
-    if (valueNode.kind === Kind.STRING) {
-      return defaultScalarLiteralToValue(valueNode);
-    }
-  },
 });
 
 function serializeBoolean(outputValue: mixed): boolean {
@@ -264,11 +257,6 @@ export const GraphQLBoolean: GraphQLScalarType = new GraphQLScalarType({
     const literal = defaultScalarValueToLiteral(value);
     if (literal.kind === Kind.BOOLEAN) {
       return literal;
-    }
-  },
-  literalToValue(valueNode) {
-    if (valueNode.kind === Kind.BOOLEAN) {
-      return defaultScalarLiteralToValue(valueNode);
     }
   },
 });
@@ -319,12 +307,6 @@ export const GraphQLID: GraphQLScalarType = new GraphQLScalarType({
       return /^-?(?:0|[1-9][0-9]*)$/.test(stringValue)
         ? { kind: Kind.INT, value: stringValue }
         : { kind: Kind.STRING, value: stringValue, block: false };
-    }
-  },
-  literalToValue(valueNode: ConstValueNode): mixed {
-    // ID Int literals are represented as string values.
-    if (valueNode.kind === Kind.STRING || valueNode.kind === Kind.INT) {
-      return valueNode.value;
     }
   },
 });

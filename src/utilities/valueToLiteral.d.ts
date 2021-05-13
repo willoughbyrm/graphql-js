@@ -10,7 +10,10 @@ import { GraphQLInputType } from '../type/definition';
  * type, otherwise the default scalar `valueToLiteral` method is used, defined
  * below.
  *
- * Note: This function does not perform any coercion.
+ * The provided value is an non-coerced "input" value. This function does not
+ * perform any coercion, however it does perform validation. Provided values
+ * which are invalid for the given type will result in an `undefined` return
+ * value.
  */
 export function valueToLiteral(
   value: unknown,

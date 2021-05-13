@@ -408,7 +408,6 @@ export {
   // Create a GraphQLType from a GraphQL language AST.
   typeFromAST,
   // Create a JavaScript value from a GraphQL language AST without a Type.
-  // DEPRECATED: use literalToValue
   valueFromASTUntyped,
   // Create a GraphQL language AST from a JavaScript value.
   astFromValue,
@@ -418,10 +417,8 @@ export {
   visitWithTypeInfo,
   // Converts a value to a const value by replacing variables.
   replaceVariables,
-  // Create a GraphQL Literal AST from a JavaScript input value.
+  // Create a GraphQL literal (AST) from a JavaScript input value.
   valueToLiteral,
-  // Create a JavaScript input value from a GraphQL Literal AST.
-  literalToValue,
   // Coerces a JavaScript value to a GraphQL type, or produces errors.
   coerceInputValue,
   // Coerces a GraphQL literal (AST) to a GraphQL type, or returns undefined.

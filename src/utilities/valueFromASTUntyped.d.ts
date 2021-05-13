@@ -18,7 +18,6 @@ import { ValueNode } from '../language/ast';
  * | Int / Float          | Number           |
  * | Null                 | null             |
  *
- * @deprecated use literalToValue
  */
 export function valueFromASTUntyped(
   valueNode: ValueNode,

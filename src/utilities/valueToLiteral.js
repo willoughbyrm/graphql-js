@@ -23,7 +23,10 @@ import {
  * type, otherwise the default scalar `valueToLiteral` method is used, defined
  * below.
  *
- * Note: This function does not perform any coercion.
+ * The provided value is an non-coerced "input" value. This function does not
+ * perform any coercion, however it does perform validation. Provided values
+ * which are invalid for the given type will result in an `undefined` return
+ * value.
  */
 export function valueToLiteral(
   value: mixed,
@@ -91,9 +94,14 @@ export function valueToLiteral(
 
   // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
   if (isLeafType(type)) {
-    return type.valueToLiteral
-      ? type.valueToLiteral(value)
-      : defaultScalarValueToLiteral(value);
+    if (type.valueToLiteral) {
+      try {
+        return type.valueToLiteral(value);
+      } catch (_error) {
+        return; // Invalid: intentionally ignore error and return no value.
+      }
+    }
+    return defaultScalarValueToLiteral(value);
   }
 
   // istanbul ignore next (Not reachable. All possible input types have been considered)

@@ -18,19 +18,16 @@ function parseValue(ast: string): ValueNode {
   return _parseValue(ast, { noLocation: true });
 }
 
-function testVariables(
-  variableDefs: string,
-  variableValues: ReadOnlyObjMap<mixed>,
-) {
+function testVariables(variableDefs: string, inputs: ReadOnlyObjMap<mixed>) {
   const parser = new Parser(variableDefs, { noLocation: true });
   parser.expectToken('<SOF>');
-  const coercedVariables = getVariableValues(
+  const variableValuesOrErrors = getVariableValues(
     new GraphQLSchema({ types: [GraphQLInt] }),
     parser.parseVariableDefinitions(),
-    variableValues,
+    inputs,
   );
-  invariant(coercedVariables.coerced);
-  return coercedVariables.coerced;
+  invariant(variableValuesOrErrors.variableValues);
+  return variableValuesOrErrors.variableValues;
 }
 
 describe('replaceVariables', () => {
