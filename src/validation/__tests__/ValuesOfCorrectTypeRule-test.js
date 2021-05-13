@@ -787,7 +787,7 @@ describe('Validate: Values of correct type', () => {
         }
       `).to.deep.equal([
         {
-          message: 'Expected value of type "Int!", found null.',
+          message: 'Expected value of non-null type "Int!" not to be null.',
           locations: [{ line: 4, column: 32 }],
         },
       ]);
@@ -879,7 +879,7 @@ describe('Validate: Values of correct type', () => {
       `).to.deep.equal([
         {
           message:
-            'Field "ComplexInput.requiredField" of required type "Boolean!" was not provided.',
+            'Expected value of type "ComplexInput" to include required field "requiredField", found {intField: 4}',
           locations: [{ line: 4, column: 41 }],
         },
       ]);
@@ -915,7 +915,7 @@ describe('Validate: Values of correct type', () => {
         }
       `).to.deep.equal([
         {
-          message: 'Expected value of type "Boolean!", found null.',
+          message: 'Expected value of non-null type "Boolean!" not to be null.',
           locations: [{ line: 6, column: 29 }],
         },
       ]);
@@ -934,7 +934,7 @@ describe('Validate: Values of correct type', () => {
       `).to.deep.equal([
         {
           message:
-            'Field "invalidField" is not defined by type "ComplexInput". Did you mean "intField"?',
+            'Expected value of type "ComplexInput" not to include unknown field "invalidField". Did you mean "intField"? Found {requiredField: true, invalidField: "value"}',
           locations: [{ line: 6, column: 15 }],
         },
       ]);
@@ -1108,15 +1108,15 @@ describe('Validate: Values of correct type', () => {
         }
       `).to.deep.equal([
         {
-          message: 'Expected value of type "Int!", found null.',
+          message: 'Expected value of non-null type "Int!" not to be null.',
           locations: [{ line: 3, column: 22 }],
         },
         {
-          message: 'Expected value of type "String!", found null.',
+          message: 'Expected value of non-null type "String!" not to be null.',
           locations: [{ line: 4, column: 25 }],
         },
         {
-          message: 'Expected value of type "Boolean!", found null.',
+          message: 'Expected value of non-null type "Boolean!" not to be null.',
           locations: [{ line: 5, column: 47 }],
         },
       ]);
@@ -1142,7 +1142,7 @@ describe('Validate: Values of correct type', () => {
         },
         {
           message:
-            'Expected value of type "ComplexInput", found "NotVeryComplex".',
+            'Expected value of type "ComplexInput" to be an object, found "NotVeryComplex".',
           locations: [{ line: 5, column: 30 }],
         },
       ]);
@@ -1175,7 +1175,7 @@ describe('Validate: Values of correct type', () => {
       `).to.deep.equal([
         {
           message:
-            'Field "ComplexInput.requiredField" of required type "Boolean!" was not provided.',
+            'Expected value of type "ComplexInput" to include required field "requiredField", found {intField: 3}',
           locations: [{ line: 2, column: 55 }],
         },
       ]);
