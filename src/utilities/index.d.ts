@@ -61,9 +61,6 @@ export {
 // Create a GraphQLType from a GraphQL language AST.
 export { typeFromAST } from './typeFromAST';
 
-// Create a JavaScript value from a GraphQL language AST with a type.
-export { valueFromAST } from './valueFromAST';
-
 // Create a JavaScript value from a GraphQL language AST without a type.
 export { valueFromASTUntyped } from './valueFromASTUntyped';
 
@@ -74,8 +71,12 @@ export { astFromValue } from './astFromValue';
 // the GraphQL type system.
 export { TypeInfo, visitWithTypeInfo } from './TypeInfo';
 
-// Coerces a JavaScript value to a GraphQL type, or produces errors.
-export { coerceInputValue } from './coerceInputValue';
+export {
+  // Coerces a JavaScript value to a GraphQL type, or produces errors.
+  coerceInputValue,
+  // Coerces a GraphQL literal (AST) to a GraphQL type, or returns undefined.
+  coerceInputLiteral,
+} from './coerceInputValue';
 
 // Concatenates multiple AST together.
 export { concatAST } from './concatAST';

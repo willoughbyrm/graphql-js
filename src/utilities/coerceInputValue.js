@@ -1,8 +1,11 @@
+import type { ObjMap } from '../jsutils/ObjMap';
 import type { Path } from '../jsutils/Path';
+import { hasOwnProperty } from '../jsutils/hasOwnProperty';
 import { inspect } from '../jsutils/inspect';
 import { invariant } from '../jsutils/invariant';
 import { didYouMean } from '../jsutils/didYouMean';
 import { isObjectLike } from '../jsutils/isObjectLike';
+import { keyMap } from '../jsutils/keyMap';
 import { suggestionList } from '../jsutils/suggestionList';
 import { printPathArray } from '../jsutils/printPathArray';
 import { addPath, pathToArray } from '../jsutils/Path';
@@ -16,7 +19,11 @@ import {
   isInputObjectType,
   isListType,
   isNonNullType,
+  isRequiredInput,
 } from '../type/definition';
+
+import type { ValueNode } from '../language/ast';
+import { Kind } from '../language/kinds';
 
 type OnErrorCB = (
   path: $ReadOnlyArray<string | number>,
@@ -185,4 +192,130 @@ function coerceInputValueImpl(
 
   // istanbul ignore next (Not reachable. All possible input types have been considered)
   invariant(false, 'Unexpected input type: ' + inspect((type: empty)));
+}
+
+/**
+ * Produces a coerced "internal" JavaScript value given a GraphQL Value AST.
+ *
+ * Returns `undefined` when the value could not be validly coerced according to
+ * the provided type.
+ */
+export function coerceInputLiteral(
+  valueNode: ValueNode,
+  type: GraphQLInputType,
+  variables?: ?ObjMap<mixed>,
+): mixed {
+  if (valueNode.kind === Kind.VARIABLE) {
+    if (!variables || isMissingVariable(valueNode, variables)) {
+      return; // Invalid: intentionally return no value.
+    }
+    const variableValue = variables[valueNode.name.value];
+    if (variableValue === null && isNonNullType(type)) {
+      return; // Invalid: intentionally return no value.
+    }
+    // Note: This does no further checking that this variable is correct.
+    // This assumes validated has checked this variable is of the correct type.
+    return variableValue;
+  }
+
+  if (isNonNullType(type)) {
+    if (valueNode.kind === Kind.NULL) {
+      return; // Invalid: intentionally return no value.
+    }
+    return coerceInputLiteral(valueNode, type.ofType, variables);
+  }
+
+  if (valueNode.kind === Kind.NULL) {
+    return null; // Explicitly return the value null.
+  }
+
+  if (isListType(type)) {
+    if (valueNode.kind !== Kind.LIST) {
+      // Lists accept a non-list value as a list of one.
+      const itemValue = coerceInputLiteral(valueNode, type.ofType, variables);
+      if (itemValue === undefined) {
+        return; // Invalid: intentionally return no value.
+      }
+      return [itemValue];
+    }
+    const coercedValue = [];
+    for (const itemNode of valueNode.values) {
+      let itemValue = coerceInputLiteral(itemNode, type.ofType, variables);
+      if (itemValue === undefined) {
+        if (
+          isMissingVariable(itemNode, variables) &&
+          !isNonNullType(type.ofType)
+        ) {
+          // A missing variable within a list is coerced to null.
+          itemValue = null;
+        } else {
+          return; // Invalid: intentionally return no value.
+        }
+      }
+      coercedValue.push(itemValue);
+    }
+    return coercedValue;
+  }
+
+  if (isInputObjectType(type)) {
+    if (valueNode.kind !== Kind.OBJECT) {
+      return; // Invalid: intentionally return no value.
+    }
+
+    const coercedValue = {};
+    const fieldDefs = type.getFields();
+    const hasUndefinedField = valueNode.fields.some(
+      (field) => !hasOwnProperty(fieldDefs, field.name.value),
+    );
+    if (hasUndefinedField) {
+      return; // Invalid: intentionally return no value.
+    }
+    const fieldNodes = keyMap(valueNode.fields, (field) => field.name.value);
+    for (const field of Object.values(fieldDefs)) {
+      const fieldNode = fieldNodes[field.name];
+      if (!fieldNode || isMissingVariable(fieldNode.value, variables)) {
+        if (isRequiredInput(field)) {
+          return; // Invalid: intentionally return no value.
+        }
+        if (field.defaultValue !== undefined) {
+          coercedValue[field.name] = field.defaultValue;
+        }
+      } else {
+        const fieldValue = coerceInputLiteral(
+          fieldNode.value,
+          field.type,
+          variables,
+        );
+        if (fieldValue === undefined) {
+          return; // Invalid: intentionally return no value.
+        }
+        coercedValue[field.name] = fieldValue;
+      }
+    }
+    return coercedValue;
+  }
+
+  // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
+  if (isLeafType(type)) {
+    try {
+      return type.parseLiteral(valueNode, variables);
+    } catch (_error) {
+      return; // Invalid: ignore error and intentionally return no value.
+    }
+  }
+
+  // istanbul ignore next (Not reachable. All possible input types have been considered)
+  invariant(false, 'Unexpected input type: ' + inspect((type: empty)));
+}
+
+// Returns true if the provided valueNode is a variable which is not defined
+// in the set of variables.
+function isMissingVariable(
+  valueNode: ValueNode,
+  variables: ?ObjMap<mixed>,
+): boolean {
+  return (
+    valueNode.kind === Kind.VARIABLE &&
+    (variables == null || variables[valueNode.name.value] === undefined)
+  );
 }
