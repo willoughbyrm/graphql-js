@@ -20,7 +20,7 @@ import type {
   GraphQLEnumValueConfigMap,
 } from '../definition';
 import { GraphQLSchema } from '../schema';
-import { GraphQLString } from '../scalars';
+import { GraphQLString, GraphQLInt } from '../scalars';
 import { validateSchema, assertValidSchema } from '../validate';
 import { GraphQLDirective, assertDirective } from '../directives';
 import {
@@ -871,7 +871,7 @@ describe('Type System: Input Objects must have fields', () => {
   it('accepts Input Objects with default values without circular references (SDL)', () => {
     const validSchema = buildSchema(`
       type Query {
-        field(arg1: A, arg2: B, arg3: C): String
+        field(arg1: A, arg2: B): String
       }
 
       input A {
@@ -882,6 +882,8 @@ describe('Type System: Input Objects must have fields', () => {
 
       input B {
         x: B2 = {}
+        y: String = "abc"
+        z: Custom = {}
       }
 
       input B2 {
@@ -890,11 +892,6 @@ describe('Type System: Input Objects must have fields', () => {
 
       input B3 {
         x: B = { x: { x: null } }
-      }
-
-      input C {
-        x: String = "123"
-        y: Custom = {}
       }
 
       scalar Custom
@@ -917,6 +914,8 @@ describe('Type System: Input Objects must have fields', () => {
       name: 'B',
       fields: () => ({
         x: { type: B2Type, defaultValue: {} },
+        y: { type: GraphQLString, defaultValue: 'abc' },
+        z: { type: CustomType, defaultValue: {} },
       }),
     });
 
@@ -936,14 +935,6 @@ describe('Type System: Input Objects must have fields', () => {
 
     const CustomType = new GraphQLScalarType({ name: 'Custom' });
 
-    const CType = new GraphQLInputObjectType({
-      name: 'C',
-      fields: () => ({
-        x: { type: GraphQLString, defaultValue: '123' },
-        y: { type: CustomType, defaultValue: {} },
-      }),
-    });
-
     const validSchema = new GraphQLSchema({
       query: new GraphQLObjectType({
         name: 'Query',
@@ -953,7 +944,6 @@ describe('Type System: Input Objects must have fields', () => {
             args: {
               arg1: { type: AType },
               arg2: { type: BType },
-              arg3: { type: CType },
             },
           },
         },
@@ -1160,7 +1150,7 @@ describe('Type System: Input Objects must have fields', () => {
     ]);
   });
 
-  it('rejects an Input Object type with required argument that is deprecated', () => {
+  it('rejects an Input Object type with required field that is deprecated', () => {
     const schema = buildSchema(`
       type Query {
         field(arg: SomeInputObject): String
@@ -1857,6 +1847,130 @@ describe('Type System: Arguments must have input types', () => {
   });
 });
 
+describe('Type System: Argument default values must be valid', () => {
+  it('rejects an argument with invalid default values (SDL)', () => {
+    const schema = buildSchema(`
+      type Query {
+        field(arg: Int = 3.14): Int
+      }
+
+      directive @bad(arg: Int = 2.718) on FIELD
+    `);
+
+    expect(validateSchema(schema)).to.deep.equal([
+      {
+        message:
+          '@bad(arg:) has invalid default value: Int cannot represent non-integer value: 2.718',
+        locations: [{ line: 6, column: 33 }],
+      },
+      {
+        message:
+          'Query.field(arg:) has invalid default value: Int cannot represent non-integer value: 3.14',
+        locations: [{ line: 3, column: 26 }],
+      },
+    ]);
+  });
+
+  it('rejects an argument with invalid default values (programmatic)', () => {
+    const schema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: {
+          field: {
+            type: GraphQLInt,
+            args: {
+              arg: { type: GraphQLInt, defaultValue: 3.14 },
+            },
+          },
+        },
+      }),
+      directives: [
+        new GraphQLDirective({
+          name: 'bad',
+          args: {
+            arg: { type: GraphQLInt, defaultValue: 2.718 },
+          },
+          locations: ['FIELD'],
+        }),
+      ],
+    });
+
+    expect(validateSchema(schema)).to.deep.equal([
+      {
+        message:
+          '@bad(arg:) has invalid default value: Int cannot represent non-integer value: 2.718',
+      },
+      {
+        message:
+          'Query.field(arg:) has invalid default value: Int cannot represent non-integer value: 3.14',
+      },
+    ]);
+  });
+
+  it('Attempts to offer a suggested fix if possible', () => {
+    const testEnum = new GraphQLEnumType({
+      name: 'TestEnum',
+      values: {
+        ONE: { value: 1 },
+        TWO: { value: 2 },
+      },
+    });
+
+    const testInput = new GraphQLInputObjectType({
+      name: 'TestInput',
+      fields: () => ({
+        self: { type: testInput },
+        string: { type: new GraphQLNonNull(new GraphQLList(GraphQLString)) },
+        enum: { type: new GraphQLList(testEnum) },
+      }),
+    });
+
+    const schema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: {
+          field: {
+            type: GraphQLInt,
+            args: {
+              argWithPossibleFix: {
+                type: testInput,
+                defaultValue: { self: null, string: [1], enum: 2 },
+              },
+              argWithInvalidPossibleFix: {
+                type: testInput,
+                defaultValue: { string: null },
+              },
+              argWithoutPossibleFix: {
+                type: testInput,
+                defaultValue: { enum: 3 },
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    expect(validateSchema(schema)).to.deep.equal([
+      {
+        message:
+          'Query.field(argWithPossibleFix:) has invalid default value: { self: null, string: [1], enum: 2 }. Did you mean: { self: null, string: ["1"], enum: "TWO" }?',
+      },
+      {
+        message:
+          'Query.field(argWithInvalidPossibleFix:) has invalid default value at .string: Expected value of non-null type "[String]!" not to be null.',
+      },
+      {
+        message:
+          'Query.field(argWithoutPossibleFix:) has invalid default value: Expected value of type "TestInput" to include required field "string", found { enum: 3 }',
+      },
+      {
+        message:
+          'Query.field(argWithoutPossibleFix:) has invalid default value at .enum: Enum "TestEnum" cannot represent non-string value: 3.',
+      },
+    ]);
+  });
+});
+
 describe('Type System: Input Object fields must have input types', () => {
   function schemaWithInputField(
     inputFieldConfig: GraphQLInputFieldConfig,
@@ -1948,6 +2062,61 @@ describe('Type System: Input Object fields must have input types', () => {
         message:
           'The type of SomeInputObject.foo must be Input Type but got: SomeObject.',
         locations: [{ line: 7, column: 14 }],
+      },
+    ]);
+  });
+});
+
+describe('Type System: Input Object field default values must be valid', () => {
+  it('rejects an Input Object field with invalid default values (SDL)', () => {
+    const schema = buildSchema(`
+    type Query {
+      field(arg: SomeInputObject): Int
+    }
+
+    input SomeInputObject {
+      field: Int = 3.14
+    }
+  `);
+
+    expect(validateSchema(schema)).to.deep.equal([
+      {
+        message:
+          'SomeInputObject.field has invalid default value: Int cannot represent non-integer value: 3.14',
+        locations: [{ line: 7, column: 20 }],
+      },
+    ]);
+  });
+
+  it('rejects an Input Object field with invalid default values (programmatic)', () => {
+    const someInputObject = new GraphQLInputObjectType({
+      name: 'SomeInputObject',
+      fields: {
+        field: {
+          type: GraphQLInt,
+          defaultValue: 3.14,
+        },
+      },
+    });
+
+    const schema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: {
+          field: {
+            type: GraphQLInt,
+            args: {
+              arg: { type: someInputObject },
+            },
+          },
+        },
+      }),
+    });
+
+    expect(validateSchema(schema)).to.deep.equal([
+      {
+        message:
+          'SomeInputObject.field has invalid default value: Int cannot represent non-integer value: 3.14',
       },
     ]);
   });

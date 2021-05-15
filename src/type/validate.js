@@ -257,9 +257,9 @@ function validateDefaultValue(
         });
         if (uncoercedErrors.length === 0) {
           context.reportError(
-            `${coordinate} has an already coerced default value: ${inspect(
+            `${coordinate} has invalid default value: ${inspect(
               defaultValue.value,
-            )}. Provide it as a pre-coerced value: ${inspect(uncoercedValue)}.`,
+            )}. Did you mean: ${inspect(uncoercedValue)}?`,
             defaultValueNode,
           );
           errors = [];
@@ -316,6 +316,7 @@ function uncoerceDefaultValue(value: mixed, type: GraphQLInputType): mixed {
     });
   }
 
+  // istanbul ignore else (See: 'https://github.com/graphql/graphql-js/issues/2618')
   if (isLeafType(type)) {
     // For most leaf types (Scalars, Enums), result coercion ("serialize") is
     // the inverse of input coercion ("parseValue") and will produce an
